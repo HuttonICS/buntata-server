@@ -1,0 +1,97 @@
+<project name="Knodel" default="compile" basedir=".">
+
+	<property file="build.wildcat.properties" />
+
+	<property name="src" location="src"/>
+	<property name="lib" location="lib"/>
+	<property name="cls" location="bin"/>
+	<property name="web" location="web"/>
+
+	<property name="jar" value="${lib}/knodel-server.jar"/>
+	<property name="war" value="${project.name}.war"/>
+
+	<target name="init">
+	</target>
+
+	<!-- Development classpath -->
+	<path id="project.classpath">
+		<fileset dir="${lib}"/>
+	</path>
+
+	<!-- Runtime classpath (manifest formatted) -->
+	<manifestclasspath property="jar.classpath" jarfile="${jar}">
+        <classpath>
+        	<fileset dir="${lib}">
+        		<exclude name="**/lib-devel/**"/>
+        	</fileset>
+        </classpath>
+    </manifestclasspath>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" destdir="${cls}" source="8" target="8" debug="true" includeantruntime="false">
+			<classpath refid="project.classpath"/>
+		</javac>
+	</target>
+
+	<target name="clean">
+		<delete includeemptydirs="true">
+			<fileset dir="${cls}" includes="**/*"/>
+			<fileset file="${jar}"/>
+		</delete>
+	</target>
+
+	<target name="jar" depends="clean, compile">
+
+		<jar jarfile="${jar}">
+			<fileset dir="${cls}" />
+			<manifest>
+				<attribute name="Main-Class" value="jhi.knodel.server.Knodel"/>
+				<attribute name="Class-Path" value="${jar.classpath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-client" depends="clean, compile">
+		<jar jarfile="knodel-client.jar">
+			<fileset dir="${cls}">
+				<exclude name="**/*Test.class"/>
+				<exclude name="**/server/**"/>
+				<exclude name="**/data/**"/>
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="war" depends="jar">
+		<copy
+				file="web/context.xml.template"
+				tofile="web/context.xml"
+				overwrite="true">
+			<filterset>
+				<filter token="datasource" value="${datasource}"/>
+				<filter token="database.username" value="${database.username}"/>
+				<filter token="database.password" value="${database.password}"/>
+				<filter token="database.url" value="${database.url}"/>
+			</filterset>
+		</copy>
+
+
+		<war destfile="${war}" update="false">
+			<webinf dir="web/WEB-INF"/>
+			<lib dir="${lib}"/>
+
+			<metainf file="web/context.xml" />
+		</war>
+
+		<taskdef name="undeploy" classpathref="project.classpath"
+				 classname="org.apache.catalina.ant.UndeployTask"/>
+		<taskdef name="deploy" classpathref="project.classpath"
+				 classname="org.apache.catalina.ant.DeployTask"/>
+
+		<undeploy url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}"
+				  path="/${project.name}" failOnError="false"/>
+
+		<deploy url="${tomcat.manager.url}"	username="${tomcat.manager.username}" password="${tomcat.manager.password}"
+				path="/${project.name}" war="${project.name}.war"/>
+	</target>
+
+</project>
