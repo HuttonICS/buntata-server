@@ -34,7 +34,9 @@
     <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
     -->
 
-    <Parameter name="hdf5-folder" value="@hdf5.folder@" override="true" />
+    <Parameter name="database" value="@database.url@" override="true" />
+    <Parameter name="username" value="@database.username@" override="true" />
+    <Parameter name="password" value="@database.password@" override="true" />
 
     <Resource name="@datasource@" auth="Container" factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
         type="javax.sql.DataSource" maxTotal="30" maxIdle="10" maxWaitMillis="10000" username="@database.username@"

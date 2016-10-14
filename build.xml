@@ -1,17 +1,16 @@
-<project name="Knodel" default="compile" basedir=".">
+<project name="Knodel" default="compile8" basedir=".">
 
-	<property file="build.wildcat.properties" />
+	<property file="build-wildcat.properties"/>
 
 	<property name="src" location="src"/>
 	<property name="lib" location="lib"/>
 	<property name="cls" location="bin"/>
 	<property name="web" location="web"/>
 
+	<property name="path" value="knodel/v${api.version}" />
+
 	<property name="jar" value="${lib}/knodel-server.jar"/>
 	<property name="war" value="${project.name}.war"/>
-
-	<target name="init">
-	</target>
 
 	<!-- Development classpath -->
 	<path id="project.classpath">
@@ -20,14 +19,22 @@
 
 	<!-- Runtime classpath (manifest formatted) -->
 	<manifestclasspath property="jar.classpath" jarfile="${jar}">
-        <classpath>
-        	<fileset dir="${lib}">
-        		<exclude name="**/lib-devel/**"/>
-        	</fileset>
-        </classpath>
-    </manifestclasspath>
+		<classpath>
+			<fileset dir="${lib}">
+				<exclude name="**/lib-devel/**"/>
+			</fileset>
+		</classpath>
+	</manifestclasspath>
 
-	<target name="compile" depends="init">
+	<target name="compile7" depends="clean">
+		<javac destdir="${cls}" source="7" target="7" debug="true" includeantruntime="false">
+			<src path="${src}"/>
+			<include name="jhi/knodel/resource/**" />
+			<classpath refid="project.classpath"/>
+		</javac>
+	</target>
+
+	<target name="compile8" depends="clean">
 		<javac srcdir="${src}" destdir="${cls}" source="8" target="8" debug="true" includeantruntime="false">
 			<classpath refid="project.classpath"/>
 		</javac>
@@ -40,10 +47,9 @@
 		</delete>
 	</target>
 
-	<target name="jar" depends="clean, compile">
-
+	<target name="jar" depends="compile8">
 		<jar jarfile="${jar}">
-			<fileset dir="${cls}" />
+			<fileset dir="${cls}"/>
 			<manifest>
 				<attribute name="Main-Class" value="jhi.knodel.server.Knodel"/>
 				<attribute name="Class-Path" value="${jar.classpath}"/>
@@ -51,21 +57,29 @@
 		</jar>
 	</target>
 
-	<target name="jar-client" depends="clean, compile">
-		<jar jarfile="knodel-client.jar">
+	<target name="jar-sqlite" depends="compile8">
+		<jar jarfile="${web}/WEB-INF/sqlite/sqlite-client.jar">
 			<fileset dir="${cls}">
-				<exclude name="**/*Test.class"/>
 				<exclude name="**/server/**"/>
-				<exclude name="**/data/**"/>
 			</fileset>
 		</jar>
 	</target>
 
-	<target name="war" depends="jar">
+	<target name="jar-client" depends="compile7">
+		<jar jarfile="knodel-client.jar">
+			<fileset dir="${cls}">
+				<exclude name="**/server/**"/>
+				<exclude name="**/data/**"/>
+				<exclude name="**/sqlite/**"/>
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="war" depends="jar, jar-client, jar-sqlite">
 		<copy
-				file="web/context.xml.template"
-				tofile="web/context.xml"
-				overwrite="true">
+			file="web/context.xml.template"
+			tofile="web/context.xml"
+			overwrite="true">
 			<filterset>
 				<filter token="datasource" value="${datasource}"/>
 				<filter token="database.username" value="${database.username}"/>
@@ -74,24 +88,25 @@
 			</filterset>
 		</copy>
 
-
 		<war destfile="${war}" update="false">
 			<webinf dir="web/WEB-INF"/>
 			<lib dir="${lib}"/>
 
-			<metainf file="web/context.xml" />
-		</war>
+			<zipfileset dir="res" includes="*database.db" prefix="WEB-INF"/>
 
-		<taskdef name="undeploy" classpathref="project.classpath"
-				 classname="org.apache.catalina.ant.UndeployTask"/>
-		<taskdef name="deploy" classpathref="project.classpath"
-				 classname="org.apache.catalina.ant.DeployTask"/>
+			<metainf file="web/context.xml"/>
+		</war>
+	</target>
+
+	<target name="deploy" depends="war">
+		<taskdef name="undeploy" classpathref="project.classpath" classname="org.apache.catalina.ant.UndeployTask"/>
+		<taskdef name="deploy" classpathref="project.classpath" classname="org.apache.catalina.ant.DeployTask"/>
 
 		<undeploy url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}"
-				  path="/${project.name}" failOnError="false"/>
+				  path="/${path}" failOnError="false"/>
 
-		<deploy url="${tomcat.manager.url}"	username="${tomcat.manager.username}" password="${tomcat.manager.password}"
-				path="/${project.name}" war="${project.name}.war"/>
+		<deploy url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}"
+				path="/${path}" war="${project.name}.war"/>
 	</target>
 
 </project>

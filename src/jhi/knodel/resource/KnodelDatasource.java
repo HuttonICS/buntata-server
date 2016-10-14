@@ -2,18 +2,51 @@ package jhi.knodel.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
+import java.util.*;
+
 /**
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelDatasource
+public class KnodelDatasource extends DatabaseObject
 {
+	public static final String TABLE_NAME           = "datasources";
+	public static final String FIELD_NAME           = "name";
+	public static final String FIELD_DESCRIPTION    = "description";
+	public static final String FIELD_VERSION_NUMBER = "version_number";
+	public static final String FIELD_DATA_PROVIDER  = "data_provider";
+	public static final String FIELD_CONTACT        = "contact";
+	public static final String FIELD_ICON           = "icon";
+	public static final String FiELD_SIZE			= "size";
+
 	private String name;
 	private String description;
 	private int    versionNumber;
 	private String dataProvider;
 	private String contact;
 	private String icon;
+	private long size;
+
+	public KnodelDatasource()
+	{
+	}
+
+	public KnodelDatasource(int id, Date createdOn, Date updatedOn)
+	{
+		super(id, createdOn, updatedOn);
+	}
+
+	public KnodelDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, String icon, long size)
+	{
+		super(id, createdOn, updatedOn);
+		this.name = name;
+		this.description = description;
+		this.versionNumber = versionNumber;
+		this.dataProvider = dataProvider;
+		this.contact = contact;
+		this.icon = icon;
+		this.size = size;
+	}
 
 	public String getName()
 	{
@@ -79,5 +112,30 @@ public class KnodelDatasource
 	{
 		this.icon = icon;
 		return this;
+	}
+
+	public long getSize()
+	{
+		return size;
+	}
+
+	public KnodelDatasource setSize(long size)
+	{
+		this.size = size;
+		return this;
+	}
+
+	@Override
+	public String toString()
+	{
+		return "KnodelDatasource{" +
+				"name='" + name + '\'' +
+				", description='" + description + '\'' +
+				", versionNumber=" + versionNumber +
+				", dataProvider='" + dataProvider + '\'' +
+				", contact='" + contact + '\'' +
+				", icon='" + icon + '\'' +
+				", size=" + size +
+				"} " + super.toString();
 	}
 }

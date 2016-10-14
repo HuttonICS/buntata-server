@@ -12,4 +12,5 @@
 hs_err_pid*
 
 # Custom ignores
-/build.wildcat.properties
+/build-wildcat.properties
+/web/context.xml

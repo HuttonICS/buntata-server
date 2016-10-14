@@ -2,8 +2,7 @@ package jhi.knodel.server;
 
 import org.restlet.resource.*;
 
-import java.util.*;
-
+import jhi.knodel.data.*;
 import jhi.knodel.resource.*;
 
 /**
@@ -11,6 +10,8 @@ import jhi.knodel.resource.*;
  */
 public class Datasource extends ServerResource
 {
+	private DatasourceDAO dao = new DatasourceDAO();
+
 	@Override
 	public void doInit()
 	{
@@ -20,14 +21,8 @@ public class Datasource extends ServerResource
 	}
 
 	@Get("json")
-	public List<KnodelDatasource> getJson()
+	public KnodelDatasourceList getJson()
 	{
-		List<KnodelDatasource> result = new ArrayList<>();
-
-		result.add(new KnodelDatasource()
-				.setName("Name")
-				.setDescription("Description"));
-
-		return result;
+		return dao.getAll();
 	}
 }

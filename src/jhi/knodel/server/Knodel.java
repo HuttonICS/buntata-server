@@ -2,6 +2,7 @@ package jhi.knodel.server;
 
 import org.restlet.*;
 import org.restlet.engine.application.*;
+import org.restlet.resource.*;
 import org.restlet.routing.*;
 import org.restlet.service.*;
 
@@ -33,6 +34,7 @@ public class Knodel extends Application
 		corsFilter.setSkippingResourceForCorsOptions(false);
 
 		attachToRouter(router, "/datasource", Datasource.class);
+		attachToRouter(router, "/datasource/{id}/download", DatasourceDownload.class);
 
 		return corsFilter;
 	}
