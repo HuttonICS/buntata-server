@@ -1,12 +1,13 @@
 package jhi.knodel.resource;
 
+import java.io.*;
 import java.util.*;
 
 /**
  * @author Sebastian Raubach
  */
 
-public abstract class DatabaseObject
+public abstract class DatabaseObject implements Serializable
 {
 	public static final String FIELD_ID         = "id";
 	public static final String FIELD_CREATED_ON = "created_on";

@@ -10,14 +10,14 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KnodelAttributeValue extends DatabaseObject
 {
-	public static final String TABLE_NAME = "attributevalues";
-	public static final String FIELD_NODE_ID = "node_id";
+	public static final String TABLE_NAME         = "attributevalues";
+	public static final String FIELD_NODE_ID      = "node_id";
 	public static final String FIELD_ATTRIBUTE_ID = "attribute_id";
-	public static final String FIELD_VALUE = "value";
+	public static final String FIELD_VALUE        = "value";
 
 	private Integer nodeId;
 	private Integer attributeId;
-	private String value;
+	private String  value;
 
 	public KnodelAttributeValue()
 	{

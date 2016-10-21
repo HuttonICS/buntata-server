@@ -10,6 +10,9 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KnodelMediaType extends DatabaseObject
 {
+	public static final String TYPE_IMAGE = "Image";
+	public static final String TYPE_VIDEO = "Video";
+
 	public static final String TABLE_NAME = "mediatypes";
 	public static final String FIELD_NAME = "name";
 

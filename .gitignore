@@ -4,7 +4,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
@@ -14,3 +13,5 @@ hs_err_pid*
 # Custom ignores
 /build-wildcat.properties
 /web/context.xml
+/*.jar
+/web/WEB-INF/sqlite/

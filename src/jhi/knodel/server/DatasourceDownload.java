@@ -3,10 +3,11 @@ package jhi.knodel.server;
 import org.restlet.data.*;
 import org.restlet.representation.*;
 import org.restlet.resource.*;
-import org.zeroturnaround.zip.*;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
+import java.util.zip.*;
 
 import javax.activation.*;
 import javax.servlet.*;
@@ -102,7 +103,8 @@ public class DatasourceDownload extends ServerResource
 
 			// Zip it
 			File zipFile = File.createTempFile("knodel-datasource-" + id + "-", ".zip");
-			ZipUtil.pack(folder, zipFile);
+			zipIt(folder, zipFile);
+//			ZipUtil.pack(folder, zipFile);
 
 			return zipFile;
 		}
@@ -112,5 +114,62 @@ public class DatasourceDownload extends ServerResource
 		}
 
 		return null;
+	}
+
+	public void zipIt(File sourceFolder, File targetFile)
+	{
+		byte[] buffer = new byte[1024];
+
+		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(targetFile)))
+		{
+			System.out.println("Output to Zip : " + targetFile);
+
+			List<File> fileList = new ArrayList<>();
+
+			generateFileList(fileList, sourceFolder);
+
+			for (File file : fileList)
+			{
+				System.out.println("File Added : " + file);
+				ZipEntry ze = new ZipEntry(file.getName());
+				zos.putNextEntry(ze);
+				try (FileInputStream fis = new FileInputStream(file))
+				{
+					int len;
+					while ((len = fis.read(buffer)) > 0)
+					{
+						zos.write(buffer, 0, len);
+					}
+				}
+			}
+
+			zos.closeEntry();
+			System.out.println("Folder successfully compressed");
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	private void generateFileList(List<File> result, File parent)
+	{
+		// add file only
+		if (parent.isFile())
+		{
+			result.add(parent);
+		}
+
+		if (parent.isDirectory())
+		{
+			File[] children = parent.listFiles();
+			if (children != null)
+			{
+				for (File child : children)
+				{
+					generateFileList(result, child);
+				}
+			}
+		}
 	}
 }

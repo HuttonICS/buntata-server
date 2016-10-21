@@ -11,7 +11,7 @@ import java.util.*;
 public class KnodelMedia extends DatabaseObject
 {
 	public static final String TABLE_NAME                      = "media";
-	public static final String FIELD_MEDIATYPE_ID             = "mediatype_id";
+	public static final String FIELD_MEDIATYPE_ID              = "mediatype_id";
 	public static final String FIELD_NAME                      = "name";
 	public static final String FIELD_DESCRIPTION               = "description";
 	public static final String FIELD_INTERNAL_LINK             = "internal_link";

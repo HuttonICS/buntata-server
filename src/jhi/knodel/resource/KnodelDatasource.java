@@ -17,7 +17,7 @@ public class KnodelDatasource extends DatabaseObject
 	public static final String FIELD_DATA_PROVIDER  = "data_provider";
 	public static final String FIELD_CONTACT        = "contact";
 	public static final String FIELD_ICON           = "icon";
-	public static final String FiELD_SIZE			= "size";
+	public static final String FiELD_SIZE           = "size";
 
 	private String name;
 	private String description;
@@ -25,7 +25,7 @@ public class KnodelDatasource extends DatabaseObject
 	private String dataProvider;
 	private String contact;
 	private String icon;
-	private long size;
+	private long   size;
 
 	public KnodelDatasource()
 	{
