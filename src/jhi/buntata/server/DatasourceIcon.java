@@ -16,9 +16,14 @@
 
 package jhi.buntata.server;
 
+import org.restlet.data.*;
+import org.restlet.representation.*;
 import org.restlet.resource.*;
 
+import java.io.*;
 import java.util.*;
+
+import javax.activation.*;
 
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
@@ -26,7 +31,7 @@ import jhi.buntata.resource.*;
 /**
  * @author Sebastian Raubach
  */
-public class Datasource extends ServerResource
+public class DatasourceIcon extends ServerResource
 {
 	private DatasourceDAO dao = new DatasourceDAO();
 	private int           id  = -1;
@@ -45,12 +50,36 @@ public class Datasource extends ServerResource
 		}
 	}
 
-	@Get("json")
-	public List<BuntataDatasource> getJson()
+	@Get
+	public FileRepresentation getImage()
 	{
-		if(id == -1)
-			return dao.getAll();
-		else
-			return dao.get(id);
+		List<BuntataDatasource> datasource = dao.get(id);
+
+		FileRepresentation representation = null;
+
+		if (datasource.size() > 0)
+		{
+			String icon = datasource.get(0).getIcon();
+
+			if (icon != null)
+			{
+				File file = new File(icon);
+
+				if (file.exists() && file.isFile())
+				{
+					MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+					String mimeTypeStr = mimeTypesMap.getContentType(file);
+					MediaType mt = MediaType.IMAGE_ALL;
+					representation = new FileRepresentation(file, mt);
+
+					Disposition disp = new Disposition(Disposition.TYPE_ATTACHMENT);
+					disp.setFilename(file.getName());
+					disp.setSize(file.length());
+					representation.setDisposition(disp);
+				}
+			}
+		}
+
+		return representation;
 	}
 }

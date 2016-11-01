@@ -47,6 +47,27 @@ public class DatasourceDAO
 		return result;
 	}
 
+	public List<BuntataDatasource> get(int id)
+	{
+		List<BuntataDatasource> result = new ArrayList<>();
+
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM datasources WHERE id = ?", id);
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result.add(Parser.Inst.get().parse(rs));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
 	public void updateSize(BuntataDatasource datasource)
 	{
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();

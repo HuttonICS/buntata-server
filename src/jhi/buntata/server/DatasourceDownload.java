@@ -49,7 +49,6 @@ public class DatasourceDownload extends ServerResource
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{
-			e.printStackTrace();
 		}
 
 		try
@@ -60,7 +59,6 @@ public class DatasourceDownload extends ServerResource
 		}
 		catch (NullPointerException e)
 		{
-			e.printStackTrace();
 		}
 	}
 

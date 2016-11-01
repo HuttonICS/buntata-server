@@ -50,6 +50,8 @@ public class Buntata extends Application
 		corsFilter.setSkippingResourceForCorsOptions(false);
 
 		attachToRouter(router, "/datasource", Datasource.class);
+		attachToRouter(router, "/datasource/{id}", Datasource.class);
+		attachToRouter(router, "/datasource/{id}/icon", DatasourceIcon.class);
 		attachToRouter(router, "/datasource/{id}/download", DatasourceDownload.class);
 
 		return corsFilter;
