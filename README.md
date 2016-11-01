@@ -1,4 +1,4 @@
-KNODEL-SERVER
+BUNTATA-SERVER
 =======
 
 This is a placeholder for the server side of an upcoming app.
