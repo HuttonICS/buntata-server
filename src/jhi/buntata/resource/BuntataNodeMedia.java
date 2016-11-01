@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -24,32 +24,29 @@ import java.util.*;
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelAttributeValue extends DatabaseObject
+public class BuntataNodeMedia extends DatabaseObject
 {
-	public static final String TABLE_NAME         = "attributevalues";
-	public static final String FIELD_NODE_ID      = "node_id";
-	public static final String FIELD_ATTRIBUTE_ID = "attribute_id";
-	public static final String FIELD_VALUE        = "value";
+	public static final String TABLE_NAME     = "nodemedia";
+	public static final String FIELD_NODE_ID  = "node_id";
+	public static final String FIELD_MEDIA_ID = "media_id";
 
 	private Integer nodeId;
-	private Integer attributeId;
-	private String  value;
+	private Integer mediaId;
 
-	public KnodelAttributeValue()
+	public BuntataNodeMedia()
 	{
 	}
 
-	public KnodelAttributeValue(int id, Date createdOn, Date updatedOn)
+	public BuntataNodeMedia(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public KnodelAttributeValue(int id, Date createdOn, Date updatedOn, Integer nodeId, Integer attributeId, String value)
+	public BuntataNodeMedia(int id, Date createdOn, Date updatedOn, Integer nodeId, Integer mediaId)
 	{
 		super(id, createdOn, updatedOn);
 		this.nodeId = nodeId;
-		this.attributeId = attributeId;
-		this.value = value;
+		this.mediaId = mediaId;
 	}
 
 	public Integer getNodeId()
@@ -57,41 +54,29 @@ public class KnodelAttributeValue extends DatabaseObject
 		return nodeId;
 	}
 
-	public KnodelAttributeValue setNodeId(Integer nodeId)
+	public BuntataNodeMedia setNodeId(Integer nodeId)
 	{
 		this.nodeId = nodeId;
 		return this;
 	}
 
-	public Integer getAttributeId()
+	public Integer getMediaId()
 	{
-		return attributeId;
+		return mediaId;
 	}
 
-	public KnodelAttributeValue setAttributeId(Integer attributeId)
+	public BuntataNodeMedia setMediaId(Integer mediaId)
 	{
-		this.attributeId = attributeId;
-		return this;
-	}
-
-	public String getValue()
-	{
-		return value;
-	}
-
-	public KnodelAttributeValue setValue(String value)
-	{
-		this.value = value;
+		this.mediaId = mediaId;
 		return this;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "KnodelAttributeValue{" +
+		return "BuntataNodeMedia{" +
 				"nodeId=" + nodeId +
-				", attributeId=" + attributeId +
-				", value='" + value + '\'' +
+				", mediaId=" + mediaId +
 				"} " + super.toString();
 	}
 }

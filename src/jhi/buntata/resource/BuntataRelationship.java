@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -24,38 +24,59 @@ import java.util.*;
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelAttribute extends DatabaseObject
+public class BuntataRelationship extends DatabaseObject
 {
-	public static final String TABLE_NAME = "attributes";
-	public static final String FIELD_NAME = "name";
+	public static final String TABLE_NAME   = "relationships";
+	public static final String FIELD_PARENT = "parent";
+	public static final String FIELD_CHILD  = "child";
 
-	private String name;
+	private Integer parent;
+	private Integer child;
 
-	public KnodelAttribute()
+	public BuntataRelationship()
 	{
 	}
 
-	public KnodelAttribute(int id, Date createdOn, Date updatedOn)
+	public BuntataRelationship(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public String getName()
+	public BuntataRelationship(int id, Date createdOn, Date updatedOn, Integer parent, Integer child)
 	{
-		return name;
+		super(id, createdOn, updatedOn);
+		this.parent = parent;
+		this.child = child;
 	}
 
-	public KnodelAttribute setName(String name)
+	public Integer getParent()
 	{
-		this.name = name;
+		return parent;
+	}
+
+	public BuntataRelationship setParent(Integer parent)
+	{
+		this.parent = parent;
+		return this;
+	}
+
+	public Integer getChild()
+	{
+		return child;
+	}
+
+	public BuntataRelationship setChild(Integer child)
+	{
+		this.child = child;
 		return this;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "KnodelAttribute{" +
-				"name='" + name + '\'' +
+		return "BuntataRelationship{" +
+				"parent=" + parent +
+				", child=" + child +
 				"} " + super.toString();
 	}
 }

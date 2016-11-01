@@ -14,18 +14,40 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
-import jhi.knodel.resource.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class NodeMediaDAO
+public class NodeDAO
 {
-	public static class Parser extends DatabaseObjectParser<KnodelNodeMedia>
+	public List<BuntataNode> getAllForDatasource(BuntataDatasource ds)
+	{
+		List<BuntataNode> result = new ArrayList<>();
+
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM nodes WHERE datasource_id = ?", ds.getId());
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result.add(Parser.Inst.get().parse(rs));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	public static class Parser extends DatabaseObjectParser<BuntataNode>
 	{
 		public static final class Inst
 		{
@@ -50,11 +72,12 @@ public class NodeMediaDAO
 		}
 
 		@Override
-		public KnodelNodeMedia parse(ResultSet rs) throws SQLException
+		public BuntataNode parse(ResultSet rs) throws SQLException
 		{
-			return new KnodelNodeMedia(rs.getInt(KnodelNodeMedia.FIELD_ID), rs.getTimestamp(KnodelNodeMedia.FIELD_CREATED_ON), rs.getTimestamp(KnodelNodeMedia.FIELD_UPDATED_ON))
-					.setNodeId(rs.getInt(KnodelNodeMedia.FIELD_NODE_ID))
-					.setMediaId(rs.getInt(KnodelNodeMedia.FIELD_MEDIA_ID));
+			return new BuntataNode(rs.getInt(BuntataNode.FIELD_ID), rs.getTimestamp(BuntataNode.FIELD_CREATED_ON), rs.getTimestamp(BuntataNode.FIELD_UPDATED_ON))
+					.setDatasourceId(rs.getInt(BuntataNode.FIELD_DATASOURCE_ID))
+					.setName(rs.getString(BuntataNode.FIELD_NAME))
+					.setDescription(rs.getString(BuntataNode.FIELD_DESCRIPTION));
 		}
 	}
 }

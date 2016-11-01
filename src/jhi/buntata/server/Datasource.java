@@ -14,29 +14,33 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.server;
 
-import java.sql.*;
+import org.restlet.resource.*;
+
+import java.util.*;
+
+import jhi.buntata.data.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class DatabaseUtils
+public class Datasource extends ServerResource
 {
-	public static PreparedStatement getByIdStatement(Connection con, String query, int id) throws SQLException
-	{
-		PreparedStatement stmt = con.prepareStatement(query);
-		stmt.setInt(1, id);
+	private DatasourceDAO dao = new DatasourceDAO();
 
-		return stmt;
+	@Override
+	public void doInit()
+	{
+		super.doInit();
+
+		// Parse parameters here
 	}
 
-	public static PreparedStatement updateByIdLongStatement(Connection con, String query, int id, long value) throws SQLException
+	@Get("json")
+	public List<BuntataDatasource> getJson()
 	{
-		PreparedStatement stmt = con.prepareStatement(query);
-		stmt.setLong(1, value);
-		stmt.setInt(2, id);
-
-		return stmt;
+		return dao.getAll();
 	}
 }

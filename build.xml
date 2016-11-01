@@ -7,9 +7,9 @@
 	<property name="cls" location="bin"/>
 	<property name="web" location="web"/>
 
-	<property name="path" value="knodel/v${api.version}" />
+	<property name="path" value="buntata/v${api.version}" />
 
-	<property name="jar" value="${lib}/knodel-server.jar"/>
+	<property name="jar" value="${lib}/buntata-server.jar"/>
 	<property name="war" value="${project.name}.war"/>
 
 	<!-- Development classpath -->
@@ -29,7 +29,7 @@
 	<target name="compile7" depends="clean">
 		<javac destdir="${cls}" source="7" target="7" debug="true" includeantruntime="false">
 			<src path="${src}"/>
-			<include name="jhi/knodel/resource/**" />
+			<include name="jhi/buntata/resource/**" />
 			<classpath refid="project.classpath"/>
 		</javac>
 	</target>
@@ -51,7 +51,7 @@
 		<jar jarfile="${jar}">
 			<fileset dir="${cls}"/>
 			<manifest>
-				<attribute name="Main-Class" value="jhi.knodel.server.Knodel"/>
+				<attribute name="Main-Class" value="jhi.buntata.server.Buntata"/>
 				<attribute name="Class-Path" value="${jar.classpath}"/>
 			</manifest>
 		</jar>
@@ -66,7 +66,7 @@
 	</target>
 
 	<target name="jar-client" depends="compile7">
-		<jar jarfile="knodel-client.jar">
+		<jar jarfile="buntata-client.jar">
 			<fileset dir="${cls}">
 				<exclude name="**/server/**"/>
 				<exclude name="**/data/**"/>

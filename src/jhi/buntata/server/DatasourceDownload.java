@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.server;
+package jhi.buntata.server;
 
 import org.restlet.data.*;
 import org.restlet.representation.*;
@@ -28,7 +28,7 @@ import java.util.zip.*;
 import javax.activation.*;
 import javax.servlet.*;
 
-import jhi.knodel.sqlite.*;
+import jhi.buntata.sqlite.*;
 
 /**
  * @author Sebastian Raubach
@@ -36,6 +36,7 @@ import jhi.knodel.sqlite.*;
 public class DatasourceDownload extends ServerResource
 {
 	private int id = -1;
+	private boolean includeVideos = true;
 
 	@Override
 	public void doInit()
@@ -47,6 +48,17 @@ public class DatasourceDownload extends ServerResource
 			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
+		{
+			e.printStackTrace();
+		}
+
+		try
+		{
+			String queryValue = getQueryValue("includevideos");
+			if(queryValue != null)
+				this.includeVideos = Boolean.parseBoolean(queryValue);
+		}
+		catch (NullPointerException e)
 		{
 			e.printStackTrace();
 		}
@@ -91,7 +103,7 @@ public class DatasourceDownload extends ServerResource
 			File sourceFile = new File(servlet.getRealPath("/WEB-INF/database.db"));
 
 			// Create a temporary directory and new sqlite file
-			File folder = Files.createTempDirectory("knodel-datasource-" + id + "-").toFile();
+			File folder = Files.createTempDirectory("buntata-datasource-" + id + "-").toFile();
 			File targetFile = new File(folder, id + ".sqlite");
 
 			// Get the classpath elements
@@ -106,7 +118,7 @@ public class DatasourceDownload extends ServerResource
 
 			// Define the external process
 			ProcessBuilder processBuilder = new ProcessBuilder("java", "-cp", jdbcJar.getAbsolutePath() + File.pathSeparator + jdbcClient.getAbsolutePath() + File.pathSeparator + libFolder.getAbsolutePath() + "/*", MySqlToSqLiteConverter.class.getCanonicalName(),
-					Integer.toString(id), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
+					Integer.toString(id), Boolean.toString(includeVideos), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
 
 			// Redirect output
 			processBuilder = processBuilder.inheritIO();
@@ -118,9 +130,10 @@ public class DatasourceDownload extends ServerResource
 			System.out.println("Exit value: " + process.waitFor());
 
 			// Zip it
-			File zipFile = File.createTempFile("knodel-datasource-" + id + "-", ".zip");
+			File zipFile = File.createTempFile("buntata-datasource-" + id + "-", ".zip");
 			zipIt(folder, zipFile);
-//			ZipUtil.pack(folder, zipFile);
+
+			folder.delete();
 
 			return zipFile;
 		}
@@ -138,7 +151,7 @@ public class DatasourceDownload extends ServerResource
 
 		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(targetFile)))
 		{
-			System.out.println("Output to Zip : " + targetFile);
+//			System.out.println("Output to Zip : " + targetFile);
 
 			List<File> fileList = new ArrayList<>();
 
@@ -146,7 +159,7 @@ public class DatasourceDownload extends ServerResource
 
 			for (File file : fileList)
 			{
-				System.out.println("File Added : " + file);
+//				System.out.println("File Added : " + file);
 				ZipEntry ze = new ZipEntry(file.getName());
 				zos.putNextEntry(ze);
 				try (FileInputStream fis = new FileInputStream(file))
@@ -160,7 +173,7 @@ public class DatasourceDownload extends ServerResource
 			}
 
 			zos.closeEntry();
-			System.out.println("Folder successfully compressed");
+//			System.out.println("Folder successfully compressed");
 		}
 		catch (IOException e)
 		{

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import java.sql.*;
 
-import jhi.knodel.resource.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class AttributeDAO
+public class NodeMediaDAO
 {
-	public static class Parser extends DatabaseObjectParser<KnodelAttribute>
+	public static class Parser extends DatabaseObjectParser<BuntataNodeMedia>
 	{
 		public static final class Inst
 		{
@@ -50,10 +50,11 @@ public class AttributeDAO
 		}
 
 		@Override
-		public KnodelAttribute parse(ResultSet rs) throws SQLException
+		public BuntataNodeMedia parse(ResultSet rs) throws SQLException
 		{
-			return new KnodelAttribute(rs.getInt(KnodelAttribute.FIELD_ID), rs.getTimestamp(KnodelAttribute.FIELD_CREATED_ON), rs.getTimestamp(KnodelAttribute.FIELD_UPDATED_ON))
-					.setName(rs.getString(KnodelAttribute.FIELD_NAME));
+			return new BuntataNodeMedia(rs.getInt(BuntataNodeMedia.FIELD_ID), rs.getTimestamp(BuntataNodeMedia.FIELD_CREATED_ON), rs.getTimestamp(BuntataNodeMedia.FIELD_UPDATED_ON))
+					.setNodeId(rs.getInt(BuntataNodeMedia.FIELD_NODE_ID))
+					.setMediaId(rs.getInt(BuntataNodeMedia.FIELD_MEDIA_ID));
 		}
 	}
 }

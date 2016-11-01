@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -24,21 +24,18 @@ import java.util.*;
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelMediaType extends DatabaseObject
+public class BuntataAttribute extends DatabaseObject
 {
-	public static final String TYPE_IMAGE = "Image";
-	public static final String TYPE_VIDEO = "Video";
-
-	public static final String TABLE_NAME = "mediatypes";
+	public static final String TABLE_NAME = "attributes";
 	public static final String FIELD_NAME = "name";
 
 	private String name;
 
-	public KnodelMediaType()
+	public BuntataAttribute()
 	{
 	}
 
-	public KnodelMediaType(int id, Date createdOn, Date updatedOn)
+	public BuntataAttribute(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
@@ -48,7 +45,7 @@ public class KnodelMediaType extends DatabaseObject
 		return name;
 	}
 
-	public KnodelMediaType setName(String name)
+	public BuntataAttribute setName(String name)
 	{
 		this.name = name;
 		return this;
@@ -57,7 +54,7 @@ public class KnodelMediaType extends DatabaseObject
 	@Override
 	public String toString()
 	{
-		return "KnodelMediaType{" +
+		return "BuntataAttribute{" +
 				"name='" + name + '\'' +
 				"} " + super.toString();
 	}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -24,7 +24,7 @@ import java.util.*;
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelNode extends DatabaseObject
+public class BuntataNode extends DatabaseObject
 {
 	public static final String TABLE_NAME          = "nodes";
 	public static final String FIELD_DATASOURCE_ID = "datasource_id";
@@ -35,16 +35,16 @@ public class KnodelNode extends DatabaseObject
 	private String  name;
 	private String  description;
 
-	public KnodelNode()
+	public BuntataNode()
 	{
 	}
 
-	public KnodelNode(int id, Date createdOn, Date updatedOn)
+	public BuntataNode(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public KnodelNode(int id, Date createdOn, Date updatedOn, Integer datasourceId, String name, String description)
+	public BuntataNode(int id, Date createdOn, Date updatedOn, Integer datasourceId, String name, String description)
 	{
 		super(id, createdOn, updatedOn);
 		this.datasourceId = datasourceId;
@@ -57,7 +57,7 @@ public class KnodelNode extends DatabaseObject
 		return datasourceId;
 	}
 
-	public KnodelNode setDatasourceId(Integer datasourceId)
+	public BuntataNode setDatasourceId(Integer datasourceId)
 	{
 		this.datasourceId = datasourceId;
 		return this;
@@ -68,7 +68,7 @@ public class KnodelNode extends DatabaseObject
 		return name;
 	}
 
-	public KnodelNode setName(String name)
+	public BuntataNode setName(String name)
 	{
 		this.name = name;
 		return this;
@@ -79,7 +79,7 @@ public class KnodelNode extends DatabaseObject
 		return description;
 	}
 
-	public KnodelNode setDescription(String description)
+	public BuntataNode setDescription(String description)
 	{
 		this.description = description;
 		return this;
@@ -88,7 +88,7 @@ public class KnodelNode extends DatabaseObject
 	@Override
 	public String toString()
 	{
-		return "KnodelNode{" +
+		return "BuntataNode{" +
 				"datasourceId=" + datasourceId +
 				", name='" + name + '\'' +
 				", description='" + description + '\'' +

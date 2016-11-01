@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -24,7 +24,7 @@ import java.util.*;
  * @author Sebastian Raubach
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelDatasource extends DatabaseObject
+public class BuntataDatasource extends DatabaseObject
 {
 	public static final String TABLE_NAME           = "datasources";
 	public static final String FIELD_NAME           = "name";
@@ -33,7 +33,8 @@ public class KnodelDatasource extends DatabaseObject
 	public static final String FIELD_DATA_PROVIDER  = "data_provider";
 	public static final String FIELD_CONTACT        = "contact";
 	public static final String FIELD_ICON           = "icon";
-	public static final String FiELD_SIZE           = "size";
+	public static final String FIELD_SIZE_TOTAL     = "size_total";
+	public static final String FIELD_SIZE_NO_VIDEO  = "size_no_video";
 
 	private String name;
 	private String description;
@@ -41,18 +42,19 @@ public class KnodelDatasource extends DatabaseObject
 	private String dataProvider;
 	private String contact;
 	private String icon;
-	private long   size;
+	private long   sizeTotal;
+	private long   sizeNoVideo;
 
-	public KnodelDatasource()
+	public BuntataDatasource()
 	{
 	}
 
-	public KnodelDatasource(int id, Date createdOn, Date updatedOn)
+	public BuntataDatasource(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public KnodelDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, String icon, long size)
+	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, String icon, long sizeTotal)
 	{
 		super(id, createdOn, updatedOn);
 		this.name = name;
@@ -61,7 +63,7 @@ public class KnodelDatasource extends DatabaseObject
 		this.dataProvider = dataProvider;
 		this.contact = contact;
 		this.icon = icon;
-		this.size = size;
+		this.sizeTotal = sizeTotal;
 	}
 
 	public String getName()
@@ -69,7 +71,7 @@ public class KnodelDatasource extends DatabaseObject
 		return name;
 	}
 
-	public KnodelDatasource setName(String name)
+	public BuntataDatasource setName(String name)
 	{
 		this.name = name;
 		return this;
@@ -80,7 +82,7 @@ public class KnodelDatasource extends DatabaseObject
 		return description;
 	}
 
-	public KnodelDatasource setDescription(String description)
+	public BuntataDatasource setDescription(String description)
 	{
 		this.description = description;
 		return this;
@@ -91,7 +93,7 @@ public class KnodelDatasource extends DatabaseObject
 		return versionNumber;
 	}
 
-	public KnodelDatasource setVersionNumber(int versionNumber)
+	public BuntataDatasource setVersionNumber(int versionNumber)
 	{
 		this.versionNumber = versionNumber;
 		return this;
@@ -102,7 +104,7 @@ public class KnodelDatasource extends DatabaseObject
 		return dataProvider;
 	}
 
-	public KnodelDatasource setDataProvider(String dataProvider)
+	public BuntataDatasource setDataProvider(String dataProvider)
 	{
 		this.dataProvider = dataProvider;
 		return this;
@@ -113,7 +115,7 @@ public class KnodelDatasource extends DatabaseObject
 		return contact;
 	}
 
-	public KnodelDatasource setContact(String contact)
+	public BuntataDatasource setContact(String contact)
 	{
 		this.contact = contact;
 		return this;
@@ -124,34 +126,46 @@ public class KnodelDatasource extends DatabaseObject
 		return icon;
 	}
 
-	public KnodelDatasource setIcon(String icon)
+	public BuntataDatasource setIcon(String icon)
 	{
 		this.icon = icon;
 		return this;
 	}
 
-	public long getSize()
+	public long getSizeTotal()
 	{
-		return size;
+		return sizeTotal;
 	}
 
-	public KnodelDatasource setSize(long size)
+	public BuntataDatasource setSizeTotal(long sizeTotal)
 	{
-		this.size = size;
+		this.sizeTotal = sizeTotal;
+		return this;
+	}
+
+	public long getSizeNoVideo()
+	{
+		return sizeNoVideo;
+	}
+
+	public BuntataDatasource setSizeNoVideo(long sizeNoVideo)
+	{
+		this.sizeNoVideo = sizeNoVideo;
 		return this;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "KnodelDatasource{" +
+		return "BuntataDatasource{" +
 				"name='" + name + '\'' +
 				", description='" + description + '\'' +
 				", versionNumber=" + versionNumber +
 				", dataProvider='" + dataProvider + '\'' +
 				", contact='" + contact + '\'' +
 				", icon='" + icon + '\'' +
-				", size=" + size +
+				", sizeTotal=" + sizeTotal +
+				", sizeNoVideo=" + sizeNoVideo +
 				"} " + super.toString();
 	}
 }

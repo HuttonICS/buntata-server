@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import java.sql.*;
 import java.util.*;
 
-import jhi.knodel.resource.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class NodeDAO
+public class DatasourceDAO
 {
-	public List<KnodelNode> getAllForDatasource(KnodelDatasource ds)
+	public List<BuntataDatasource> getAll()
 	{
-		List<KnodelNode> result = new ArrayList<>();
+		List<BuntataDatasource> result = new ArrayList<>();
 
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM nodes WHERE datasource_id = ?", ds.getId());
+			 PreparedStatement stmt = con.prepareStatement("SELECT * FROM datasources");
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
@@ -47,7 +47,21 @@ public class NodeDAO
 		return result;
 	}
 
-	public static class Parser extends DatabaseObjectParser<KnodelNode>
+	public void updateSize(BuntataDatasource datasource)
+	{
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.updateByIdLongStatement(con, "UPDATE datasources SET size_total = ?, size_no_video = ? WHERE id = ?", datasource.getId(), datasource.getSizeTotal(), datasource.getSizeNoVideo()))
+		{
+			stmt.executeUpdate();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+
+	public static class Parser extends DatabaseObjectParser<BuntataDatasource>
 	{
 		public static final class Inst
 		{
@@ -72,12 +86,17 @@ public class NodeDAO
 		}
 
 		@Override
-		public KnodelNode parse(ResultSet rs) throws SQLException
+		public BuntataDatasource parse(ResultSet rs) throws SQLException
 		{
-			return new KnodelNode(rs.getInt(KnodelNode.FIELD_ID), rs.getTimestamp(KnodelNode.FIELD_CREATED_ON), rs.getTimestamp(KnodelNode.FIELD_UPDATED_ON))
-					.setDatasourceId(rs.getInt(KnodelNode.FIELD_DATASOURCE_ID))
-					.setName(rs.getString(KnodelNode.FIELD_NAME))
-					.setDescription(rs.getString(KnodelNode.FIELD_DESCRIPTION));
+			return new BuntataDatasource(rs.getInt(BuntataDatasource.FIELD_ID), rs.getTimestamp(BuntataDatasource.FIELD_CREATED_ON), rs.getTimestamp(BuntataDatasource.FIELD_UPDATED_ON))
+					.setName(rs.getString(BuntataDatasource.FIELD_NAME))
+					.setDescription(rs.getString(BuntataDatasource.FIELD_DESCRIPTION))
+					.setVersionNumber(rs.getInt(BuntataDatasource.FIELD_VERSION_NUMBER))
+					.setDataProvider(rs.getString(BuntataDatasource.FIELD_DATA_PROVIDER))
+					.setContact(rs.getString(BuntataDatasource.FIELD_CONTACT))
+					.setIcon(rs.getString(BuntataDatasource.FIELD_ICON))
+					.setSizeTotal(rs.getLong(BuntataDatasource.FIELD_SIZE_TOTAL))
+					.setSizeNoVideo(rs.getLong(BuntataDatasource.FIELD_SIZE_NO_VIDEO));
 		}
 	}
 }

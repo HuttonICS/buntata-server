@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.server;
+package jhi.buntata.server;
 
 import java.io.*;
 import java.util.*;
@@ -22,8 +22,8 @@ import java.util.concurrent.*;
 
 import javax.servlet.*;
 
-import jhi.knodel.data.*;
-import jhi.knodel.resource.*;
+import jhi.buntata.data.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
@@ -62,31 +62,44 @@ public class ApplicationListener implements ServletContextListener
 		public void run()
 		{
 			// Get all the data sources
-			List<KnodelDatasource> datasources = datasourceDAO.getAll().getList();
+			List<BuntataDatasource> datasources = datasourceDAO.getAll();
 
-			for (KnodelDatasource datasource : datasources)
+			for (BuntataDatasource datasource : datasources)
 			{
-				long size = 0;
+				long sizeTotal = 0;
+				long sizeNoVideo = 0;
 
 				// Get all the nodes
-				List<KnodelNode> nodes = nodeDAO.getAllForDatasource(datasource);
+				List<BuntataNode> nodes = nodeDAO.getAllForDatasource(datasource);
 
-				for (KnodelNode node : nodes)
+				for (BuntataNode node : nodes)
 				{
 					// Get all the media
-					List<KnodelMedia> media = mediaDAO.getAllForNode(node);
+					Map<String, List<BuntataMedia>> media = mediaDAO.getAllForNode(node);
 
-					// Sum up their data sizes
-					size += media.stream()
-								 .map(m -> new File(m.getInternalLink()))
-								 .filter(f -> f.exists() && f.isFile())
-								 .map(File::length)
-								 .mapToLong(Long::longValue)
-								 .sum();
+					long imageSize = media.get(BuntataMediaType.TYPE_IMAGE)
+										  .parallelStream()
+										  .map(m -> new File(m.getInternalLink()))
+										  .filter(f -> f.exists() && f.isFile())
+										  .map(File::length)
+										  .mapToLong(Long::longValue)
+										  .sum();
+
+					long videoSize = media.get(BuntataMediaType.TYPE_VIDEO)
+										  .parallelStream()
+										  .map(m -> new File(m.getInternalLink()))
+										  .filter(f -> f.exists() && f.isFile())
+										  .map(File::length)
+										  .mapToLong(Long::longValue)
+										  .sum();
+
+					sizeTotal += imageSize + videoSize;
+					sizeNoVideo += imageSize;
 				}
 
 				// Set the size
-				datasource.setSize(size);
+				datasource.setSizeTotal(sizeTotal);
+				datasource.setSizeNoVideo(sizeNoVideo);
 				// And save
 				datasourceDAO.updateSize(datasource);
 			}

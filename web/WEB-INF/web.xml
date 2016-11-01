@@ -5,26 +5,26 @@
 		 version="3.1">
 
 	<display-name>
-		Knodel web server
+		Buntata web server
 	</display-name>
 
 	<servlet>
-		<servlet-name>Knodel</servlet-name>
+		<servlet-name>Buntata</servlet-name>
 		<servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
 		<init-param>
 			<param-name>org.restlet.application</param-name>
-			<param-value>jhi.knodel.server.Knodel</param-value>
+			<param-value>jhi.buntata.server.Buntata</param-value>
 		</init-param>
 	</servlet>
 
 	<servlet-mapping>
-		<servlet-name>Knodel</servlet-name>
+		<servlet-name>Buntata</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 
 	<!-- LISTENERS -->
 	<listener>
-		<listener-class>jhi.knodel.server.ApplicationListener</listener-class>
+		<listener-class>jhi.buntata.server.ApplicationListener</listener-class>
 	</listener>
 
 </web-app>

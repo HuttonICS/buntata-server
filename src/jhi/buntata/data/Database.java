@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import javax.naming.*;
 import javax.sql.*;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.server;
+package jhi.buntata.server;
 
 import org.restlet.*;
 import org.restlet.engine.application.*;
@@ -27,12 +27,12 @@ import java.util.*;
 /**
  * @author Sebastian Raubach
  */
-public class Knodel extends Application
+public class Buntata extends Application
 {
-	public Knodel()
+	public Buntata()
 	{
-		setName("Knodel Server");
-		setDescription("This is the server implementation for Knodel");
+		setName("Buntàta Server");
+		setDescription("This is the server implementation for Buntàta");
 		setOwner("The James Hutton Institute");
 		setAuthor("Sebastian Raubach, Information & Computational Sciences");
 	}

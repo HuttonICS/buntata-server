@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package jhi.knodel.sqlite;
+package jhi.buntata.sqlite;
 
 import java.io.*;
 import java.net.*;
@@ -22,8 +22,8 @@ import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
 
-import jhi.knodel.data.*;
-import jhi.knodel.resource.*;
+import jhi.buntata.data.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
@@ -44,10 +44,11 @@ public class MySqlToSqLiteConverter
 	public static void main(String[] args) throws IOException, URISyntaxException, SQLException
 	{
 		int i = 0;
-		new MySqlToSqLiteConverter(Integer.parseInt(args[i++]), new File(args[i++]), new File(args[i++]), args[i++], args[i++], args[i++]);
+
+		new MySqlToSqLiteConverter(Integer.parseInt(args[i++]), Boolean.parseBoolean(args[i++]), new File(args[i++]), new File(args[i++]), args[i++], args[i++], args[i++]);
 	}
 
-	public MySqlToSqLiteConverter(int id, File source, File target, String database, String username, String password) throws URISyntaxException, IOException, SQLException
+	public MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password) throws URISyntaxException, IOException, SQLException
 	{
 		this.source = source;
 		this.target = target;
@@ -56,8 +57,8 @@ public class MySqlToSqLiteConverter
 		this.username = username;
 		this.password = password;
 
-		System.out.println("Reading from: " + this.source.getAbsolutePath());
-		System.out.println("Writing to: " + this.target.getAbsolutePath());
+//		System.out.println("Reading from: " + this.source.getAbsolutePath());
+//		System.out.println("Writing to: " + this.target.getAbsolutePath());
 
 		Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
@@ -69,7 +70,7 @@ public class MySqlToSqLiteConverter
 		List<Integer> attributeIds = copyAttributes(nodeIds);
 		copyAttributeData(nodeIds, attributeIds);
 		List<Integer> mediaTypeIds = copyMediaTypes(nodeIds);
-		List<Integer> mediaIds = copyMedia(nodeIds, mediaTypeIds);
+		List<Integer> mediaIds = copyMedia(nodeIds, mediaTypeIds, includeVideos);
 		copyNodeMedia(nodeIds, mediaIds);
 		copyRelationships(nodeIds);
 
@@ -109,8 +110,8 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing relationship: " + relationship);
+				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing relationship: " + relationship);
 
 				i = 1;
 				targetStmt.setInt(i++, relationship.getId());
@@ -154,8 +155,8 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing nodemedia: " + media);
+				BuntataNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing nodemedia: " + media);
 
 				i = 1;
 				targetStmt.setInt(i++, media.getId());
@@ -181,7 +182,7 @@ public class MySqlToSqLiteConverter
 		}
 	}
 
-	private List<Integer> copyMedia(List<Integer> nodeIds, List<Integer> mediaTypeIds)
+	private List<Integer> copyMedia(List<Integer> nodeIds, List<Integer> mediaTypeIds, boolean includeVideos)
 	{
 		List<Integer> ids = new ArrayList<>();
 
@@ -189,7 +190,8 @@ public class MySqlToSqLiteConverter
 			return ids;
 
 		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM media WHERE EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")) AND media.mediatype_id IN (" + getFormattedPlaceholder(mediaTypeIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `media` (`id`, `mediatype_id`, `name`, `description`, `internal_link`, `external_link`, `external_link_description`, `copyright`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"))
+			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `media` (`id`, `mediatype_id`, `name`, `description`, `internal_link`, `external_link`, `external_link_description`, `copyright`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			 PreparedStatement selectMediaType = sourceConnection.prepareStatement("SELECT * FROM mediatypes WHERE id = ?"))
 		{
 			int i = 1;
 			for (Integer id : nodeIds)
@@ -201,24 +203,48 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelMedia media = MediaDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing media: " + media);
+				BuntataMedia media = MediaDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing media: " + media);
 
 				File source = new File(media.getInternalLink());
 
-				// Now copy the media file
-				// TODO: Skip videos??? If so, update entry above and set internal to null
-				if (source.exists())
-					Files.copy(source.toPath(), new File(folder, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-				else
+				selectMediaType.setInt(1, media.getMediaTypeId());
+
+				// Check if this is a video
+				boolean isVideo = false;
+				ResultSet rsTemp = selectMediaType.executeQuery();
+				if(rsTemp.next())
+				{
+					BuntataMediaType type = MediaTypeDAO.Parser.Inst.get().parse(rsTemp);
+					isVideo = BuntataMediaType.TYPE_VIDEO.equals(type.getName());
+				}
+				rsTemp.close();
+
+				// Skip videos if this has been requested by the client
+				if(isVideo && !includeVideos)
+				{
 					media.setInternalLink(null);
+				}
+				else
+				{
+					// Now copy the media file
+					if (source.exists())
+					{
+						Files.copy(source.toPath(), new File(folder, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+						media.setInternalLink(source.getName());
+					}
+					else
+					{
+						media.setInternalLink(null);
+					}
+				}
 
 				i = 1;
 				targetStmt.setInt(i++, media.getId());
 				targetStmt.setInt(i++, media.getMediaTypeId());
 				targetStmt.setString(i++, media.getName());
 				targetStmt.setString(i++, media.getDescription());
-				targetStmt.setString(i++, source.getName());
+				targetStmt.setString(i++, media.getInternalLink());
 				targetStmt.setString(i++, media.getExternalLink());
 				targetStmt.setString(i++, media.getExternalLinkDescription());
 				targetStmt.setString(i++, media.getCopyright());
@@ -264,8 +290,8 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing mediaType: " + mediaType);
+				BuntataMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing mediaType: " + mediaType);
 
 				i = 1;
 				targetStmt.setInt(i++, mediaType.getId());
@@ -312,8 +338,8 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing value: " + value);
+				BuntataAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing value: " + value);
 
 				i = 1;
 				targetStmt.setInt(i++, value.getId());
@@ -358,8 +384,8 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				KnodelAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing attribute: " + attribute);
+				BuntataAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing attribute: " + attribute);
 
 				i = 1;
 				targetStmt.setInt(i++, attribute.getId());
@@ -398,8 +424,8 @@ public class MySqlToSqLiteConverter
 		{
 			while (rs.next())
 			{
-				KnodelNode node = NodeDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing node: " + node);
+				BuntataNode node = NodeDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing node: " + node);
 
 				int i = 1;
 				targetStmt.setInt(i++, node.getId());
@@ -431,15 +457,13 @@ public class MySqlToSqLiteConverter
 	private void copyDataSources(int id)
 	{
 		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM datasources WHERE id = " + id);
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `icon`, `size`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `icon`, `size_total`, `size_no_video`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			 ResultSet rs = sourceStmt.executeQuery())
 		{
-			while (rs.next())
+			if (rs.next())
 			{
-				KnodelDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs);
-				System.out.println("Writing datasource: " + ds);
-
-				System.out.println(ds.getUpdatedOn().getTime());
+				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs);
+//				System.out.println("Writing datasource: " + ds);
 
 				int i = 1;
 				targetStmt.setInt(i++, ds.getId());
@@ -449,7 +473,8 @@ public class MySqlToSqLiteConverter
 				targetStmt.setString(i++, ds.getDataProvider());
 				targetStmt.setString(i++, ds.getContact());
 				targetStmt.setString(i++, ds.getIcon());
-				targetStmt.setLong(i++, ds.getSize());
+				targetStmt.setLong(i++, ds.getSizeTotal());
+				targetStmt.setLong(i++, ds.getSizeNoVideo());
 				if (ds.getCreatedOn() != null)
 					targetStmt.setLong(i++, ds.getCreatedOn().getTime());
 				else

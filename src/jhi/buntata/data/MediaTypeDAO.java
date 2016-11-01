@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import java.sql.*;
 
-import jhi.knodel.resource.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
 public class MediaTypeDAO
 {
-	public static class Parser extends DatabaseObjectParser<KnodelMediaType>
+	public static class Parser extends DatabaseObjectParser<BuntataMediaType>
 	{
 		public static final class Inst
 		{
@@ -50,10 +50,10 @@ public class MediaTypeDAO
 		}
 
 		@Override
-		public KnodelMediaType parse(ResultSet rs) throws SQLException
+		public BuntataMediaType parse(ResultSet rs) throws SQLException
 		{
-			return new KnodelMediaType(rs.getInt(KnodelMediaType.FIELD_ID), rs.getTimestamp(KnodelMediaType.FIELD_CREATED_ON), rs.getTimestamp(KnodelMediaType.FIELD_UPDATED_ON))
-					.setName(rs.getString(KnodelMediaType.FIELD_NAME));
+			return new BuntataMediaType(rs.getInt(BuntataMediaType.FIELD_ID), rs.getTimestamp(BuntataMediaType.FIELD_CREATED_ON), rs.getTimestamp(BuntataMediaType.FIELD_UPDATED_ON))
+					.setName(rs.getString(BuntataMediaType.FIELD_NAME));
 		}
 	}
 }

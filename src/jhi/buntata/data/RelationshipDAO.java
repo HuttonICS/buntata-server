@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package jhi.knodel.data;
+package jhi.buntata.data;
 
 import java.sql.*;
 
-import jhi.knodel.resource.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class AttributeValueDAO
+public class RelationshipDAO
 {
-	public static class Parser extends DatabaseObjectParser<KnodelAttributeValue>
+	public static class Parser extends DatabaseObjectParser<BuntataRelationship>
 	{
 		public static final class Inst
 		{
@@ -50,12 +50,11 @@ public class AttributeValueDAO
 		}
 
 		@Override
-		public KnodelAttributeValue parse(ResultSet rs) throws SQLException
+		public BuntataRelationship parse(ResultSet rs) throws SQLException
 		{
-			return new KnodelAttributeValue(rs.getInt(KnodelAttributeValue.FIELD_ID), rs.getTimestamp(KnodelAttributeValue.FIELD_CREATED_ON), rs.getTimestamp(KnodelAttributeValue.FIELD_UPDATED_ON))
-					.setNodeId(rs.getInt(KnodelAttributeValue.FIELD_NODE_ID))
-					.setAttributeId(rs.getInt(KnodelAttributeValue.FIELD_ATTRIBUTE_ID))
-					.setValue(rs.getString(KnodelAttributeValue.FIELD_VALUE));
+			return new BuntataRelationship(rs.getInt(BuntataRelationship.FIELD_ID), rs.getTimestamp(BuntataRelationship.FIELD_CREATED_ON), rs.getTimestamp(BuntataRelationship.FIELD_UPDATED_ON))
+					.setParent(rs.getInt(BuntataRelationship.FIELD_PARENT))
+					.setChild(rs.getInt(BuntataRelationship.FIELD_CHILD));
 		}
 	}
 }

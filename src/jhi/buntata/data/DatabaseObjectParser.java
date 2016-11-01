@@ -14,46 +14,17 @@
  * limitations under the License.
  */
 
-package jhi.knodel.resource;
+package jhi.buntata.data;
 
-import com.fasterxml.jackson.annotation.*;
+import java.sql.*;
 
-import java.util.*;
+import jhi.buntata.resource.*;
 
 /**
  * @author Sebastian Raubach
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class KnodelDatasourceList
+
+public abstract class DatabaseObjectParser<T extends DatabaseObject>
 {
-	private List<KnodelDatasource> list = new ArrayList<>();
-
-	public KnodelDatasourceList()
-	{
-	}
-
-	public KnodelDatasourceList add(KnodelDatasource item)
-	{
-		list.add(item);
-		return this;
-	}
-
-	public List<KnodelDatasource> getList()
-	{
-		return list;
-	}
-
-	public KnodelDatasourceList setList(List<KnodelDatasource> list)
-	{
-		this.list = list;
-		return this;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "KnodelDatasourceList{" +
-				"list=" + list +
-				'}';
-	}
+	public abstract T parse(ResultSet rs) throws SQLException;
 }
