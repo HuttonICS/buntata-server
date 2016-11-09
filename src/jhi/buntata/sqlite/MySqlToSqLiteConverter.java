@@ -111,22 +111,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing relationship: " + relationship);
-
-				i = 1;
-				targetStmt.setInt(i++, relationship.getId());
-				targetStmt.setInt(i++, relationship.getParent());
-				targetStmt.setInt(i++, relationship.getChild());
-				if (relationship.getCreatedOn() != null)
-					targetStmt.setLong(i++, relationship.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (relationship.getUpdatedOn() != null)
-					targetStmt.setLong(i++, relationship.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				RelationshipDAO.Writer.Inst.get().write(relationship, targetStmt);
 			}
 
 			rs.close();
@@ -156,22 +141,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing nodemedia: " + media);
-
-				i = 1;
-				targetStmt.setInt(i++, media.getId());
-				targetStmt.setInt(i++, media.getNodeId());
-				targetStmt.setInt(i++, media.getMediaId());
-				if (media.getCreatedOn() != null)
-					targetStmt.setLong(i++, media.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (media.getUpdatedOn() != null)
-					targetStmt.setLong(i++, media.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				NodeMediaDAO.Writer.Inst.get().write(media, targetStmt);
 			}
 
 			rs.close();
@@ -204,7 +174,6 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataMedia media = MediaDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing media: " + media);
 
 				File source = new File(media.getInternalLink());
 
@@ -213,7 +182,7 @@ public class MySqlToSqLiteConverter
 				// Check if this is a video
 				boolean isVideo = false;
 				ResultSet rsTemp = selectMediaType.executeQuery();
-				if(rsTemp.next())
+				if (rsTemp.next())
 				{
 					BuntataMediaType type = MediaTypeDAO.Parser.Inst.get().parse(rsTemp);
 					isVideo = BuntataMediaType.TYPE_VIDEO.equals(type.getName());
@@ -221,7 +190,7 @@ public class MySqlToSqLiteConverter
 				rsTemp.close();
 
 				// Skip videos if this has been requested by the client
-				if(isVideo && !includeVideos)
+				if (isVideo && !includeVideos)
 				{
 					media.setInternalLink(null);
 				}
@@ -239,25 +208,7 @@ public class MySqlToSqLiteConverter
 					}
 				}
 
-				i = 1;
-				targetStmt.setInt(i++, media.getId());
-				targetStmt.setInt(i++, media.getMediaTypeId());
-				targetStmt.setString(i++, media.getName());
-				targetStmt.setString(i++, media.getDescription());
-				targetStmt.setString(i++, media.getInternalLink());
-				targetStmt.setString(i++, media.getExternalLink());
-				targetStmt.setString(i++, media.getExternalLinkDescription());
-				targetStmt.setString(i++, media.getCopyright());
-				if (media.getCreatedOn() != null)
-					targetStmt.setLong(i++, media.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (media.getUpdatedOn() != null)
-					targetStmt.setLong(i++, media.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				MediaDAO.Writer.Inst.get().write(media, targetStmt);
 
 				ids.add(media.getId());
 			}
@@ -291,21 +242,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing mediaType: " + mediaType);
-
-				i = 1;
-				targetStmt.setInt(i++, mediaType.getId());
-				targetStmt.setString(i++, mediaType.getName());
-				if (mediaType.getCreatedOn() != null)
-					targetStmt.setLong(i++, mediaType.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (mediaType.getUpdatedOn() != null)
-					targetStmt.setLong(i++, mediaType.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				MediaTypeDAO.Writer.Inst.get().write(mediaType, targetStmt);
 
 				ids.add(mediaType.getId());
 			}
@@ -339,23 +276,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing value: " + value);
-
-				i = 1;
-				targetStmt.setInt(i++, value.getId());
-				targetStmt.setInt(i++, value.getNodeId());
-				targetStmt.setInt(i++, value.getAttributeId());
-				targetStmt.setString(i++, value.getValue());
-				if (value.getCreatedOn() != null)
-					targetStmt.setLong(i++, value.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (value.getUpdatedOn() != null)
-					targetStmt.setLong(i++, value.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				AttributeValueDAO.Writer.Inst.get().write(value, targetStmt);
 			}
 
 			rs.close();
@@ -385,21 +306,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing attribute: " + attribute);
-
-				i = 1;
-				targetStmt.setInt(i++, attribute.getId());
-				targetStmt.setString(i++, attribute.getName());
-				if (attribute.getCreatedOn() != null)
-					targetStmt.setLong(i++, attribute.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (attribute.getUpdatedOn() != null)
-					targetStmt.setLong(i++, attribute.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				AttributeDAO.Writer.Inst.get().write(attribute, targetStmt);
 
 				ids.add(attribute.getId());
 			}
@@ -425,23 +332,7 @@ public class MySqlToSqLiteConverter
 			while (rs.next())
 			{
 				BuntataNode node = NodeDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing node: " + node);
-
-				int i = 1;
-				targetStmt.setInt(i++, node.getId());
-				targetStmt.setInt(i++, node.getDatasourceId());
-				targetStmt.setString(i++, node.getName());
-				targetStmt.setString(i++, node.getDescription());
-				if (node.getCreatedOn() != null)
-					targetStmt.setLong(i++, node.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (node.getUpdatedOn() != null)
-					targetStmt.setLong(i++, node.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				NodeDAO.Writer.Inst.get().write(node, targetStmt);
 
 				ids.add(node.getId());
 			}
@@ -457,34 +348,13 @@ public class MySqlToSqLiteConverter
 	private void copyDataSources(int id)
 	{
 		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM datasources WHERE id = " + id);
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `icon`, `size_total`, `size_no_video`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `show_key_name`, `icon`, `size_total`, `size_no_video`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			 ResultSet rs = sourceStmt.executeQuery())
 		{
 			if (rs.next())
 			{
 				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs);
-//				System.out.println("Writing datasource: " + ds);
-
-				int i = 1;
-				targetStmt.setInt(i++, ds.getId());
-				targetStmt.setString(i++, ds.getName());
-				targetStmt.setString(i++, ds.getDescription());
-				targetStmt.setInt(i++, ds.getVersionNumber());
-				targetStmt.setString(i++, ds.getDataProvider());
-				targetStmt.setString(i++, ds.getContact());
-				targetStmt.setString(i++, ds.getIcon());
-				targetStmt.setLong(i++, ds.getSizeTotal());
-				targetStmt.setLong(i++, ds.getSizeNoVideo());
-				if (ds.getCreatedOn() != null)
-					targetStmt.setLong(i++, ds.getCreatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.DATE);
-				if (ds.getUpdatedOn() != null)
-					targetStmt.setLong(i++, ds.getUpdatedOn().getTime());
-				else
-					targetStmt.setNull(i++, Types.TIMESTAMP);
-
-				targetStmt.executeUpdate();
+				DatasourceDAO.Writer.Inst.get().write(ds, targetStmt);
 			}
 		}
 		catch (SQLException e)

@@ -32,18 +32,20 @@ public class BuntataDatasource extends DatabaseObject
 	public static final String FIELD_VERSION_NUMBER = "version_number";
 	public static final String FIELD_DATA_PROVIDER  = "data_provider";
 	public static final String FIELD_CONTACT        = "contact";
+	public static final String FIELD_SHOW_KEY_NAME  = "show_key_name";
 	public static final String FIELD_ICON           = "icon";
 	public static final String FIELD_SIZE_TOTAL     = "size_total";
 	public static final String FIELD_SIZE_NO_VIDEO  = "size_no_video";
 
-	private String name;
-	private String description;
-	private int    versionNumber;
-	private String dataProvider;
-	private String contact;
-	private String icon;
-	private long   sizeTotal;
-	private long   sizeNoVideo;
+	private String  name;
+	private String  description;
+	private int     versionNumber;
+	private String  dataProvider;
+	private String  contact;
+	private boolean showKeyName;
+	private String  icon;
+	private long    sizeTotal;
+	private long    sizeNoVideo;
 
 	public BuntataDatasource()
 	{
@@ -54,7 +56,7 @@ public class BuntataDatasource extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, String icon, long sizeTotal)
+	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, boolean showKeyName, String icon, long sizeTotal)
 	{
 		super(id, createdOn, updatedOn);
 		this.name = name;
@@ -62,6 +64,7 @@ public class BuntataDatasource extends DatabaseObject
 		this.versionNumber = versionNumber;
 		this.dataProvider = dataProvider;
 		this.contact = contact;
+		this.showKeyName = showKeyName;
 		this.icon = icon;
 		this.sizeTotal = sizeTotal;
 	}
@@ -121,6 +124,17 @@ public class BuntataDatasource extends DatabaseObject
 		return this;
 	}
 
+	public boolean isShowKeyName()
+	{
+		return showKeyName;
+	}
+
+	public BuntataDatasource setShowKeyName(boolean showKeyName)
+	{
+		this.showKeyName = showKeyName;
+		return this;
+	}
+
 	public String getIcon()
 	{
 		return icon;
@@ -163,6 +177,7 @@ public class BuntataDatasource extends DatabaseObject
 				", versionNumber=" + versionNumber +
 				", dataProvider='" + dataProvider + '\'' +
 				", contact='" + contact + '\'' +
+				", showKeyName=" + showKeyName +
 				", icon='" + icon + '\'' +
 				", sizeTotal=" + sizeTotal +
 				", sizeNoVideo=" + sizeNoVideo +

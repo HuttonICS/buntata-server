@@ -47,6 +47,51 @@ public class NodeDAO
 		return result;
 	}
 
+	public static class Writer extends DatabaseObjectWriter<BuntataNode>
+	{
+		public static final class Inst
+		{
+			/**
+			 * {@link InstanceHolder} is loaded on the first execution of {@link Inst#get()} or the first access to {@link InstanceHolder#INSTANCE},
+			 * not before.
+			 * <p/>
+			 * This solution (<a href= "http://en.wikipedia.org/wiki/Initialization_on_demand_holder_idiom" >Initialization-on-demand holder
+			 * idiom</a>) is thread-safe without requiring special language constructs (i.e. <code>volatile</code> or <code>synchronized</code>).
+			 *
+			 * @author Sebastian Raubach
+			 */
+			private static final class InstanceHolder
+			{
+				private static final Writer INSTANCE = new Writer();
+			}
+
+			public static Writer get()
+			{
+				return InstanceHolder.INSTANCE;
+			}
+		}
+
+		@Override
+		public void write(BuntataNode object, PreparedStatement stmt) throws SQLException
+		{
+			int i = 1;
+			stmt.setInt(i++, object.getId());
+			stmt.setInt(i++, object.getDatasourceId());
+			stmt.setString(i++, object.getName());
+			stmt.setString(i++, object.getDescription());
+			if (object.getCreatedOn() != null)
+				stmt.setLong(i++, object.getCreatedOn().getTime());
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				stmt.setLong(i++, object.getUpdatedOn().getTime());
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.executeUpdate();
+		}
+	}
+
 	public static class Parser extends DatabaseObjectParser<BuntataNode>
 	{
 		public static final class Inst
