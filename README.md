@@ -1,7 +1,9 @@
-BUNTATA-SERVER
+Buntata Server
 =======
 
-This is a placeholder for the server side of an upcoming app.
+Buntata is a flexible and customisable application for aiding in the identification of plant diseases in the field. Buntata offers datasets which can be downloaded before going out to the field. This means that it is not necessary to have a network connection while out and about making it particularly useful for users in countries or areas where mobile networks connections are limited.
+
+We would be happy to work with individuals or organizations who have plant disease identification keys and would like to get their data into Buntata and available to the worldwide community.
 
 License
 --------
