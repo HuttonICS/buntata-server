@@ -5,8 +5,6 @@ Buntata is a flexible and customisable application for aiding in the identificat
 
 We would be happy to work with individuals or organizations who have plant disease identification keys and would like to get their data into Buntata and available to the worldwide community.
 
-This is the repository of the server side code of Buntata. For the Android app GitHub repository, visit <a href="https://github.com/buntata/buntata-app">https://github.com/buntata/buntata-app</a>.
-
 License
 --------
 
