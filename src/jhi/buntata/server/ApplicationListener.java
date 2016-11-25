@@ -36,7 +36,7 @@ public class ApplicationListener implements ServletContextListener
 	public void contextInitialized(ServletContextEvent sce)
 	{
 		scheduler = Executors.newSingleThreadScheduledExecutor();
-		scheduler.scheduleAtFixedRate(new DatasourceSizeJob(), 0, 1, TimeUnit.HOURS);
+		scheduler.scheduleAtFixedRate(new DatasourceSizeJob(), 0, 15, TimeUnit.MINUTES);
 	}
 
 	@Override
