@@ -66,7 +66,7 @@ public class MediaDAO
 		return result;
 	}
 
-	public static class Writer extends DatabaseObjectWriter<BuntataMedia>
+	public static class Writer implements DatabaseObjectWriter<BuntataMedia>
 	{
 		public static final class Inst
 		{
@@ -115,7 +115,7 @@ public class MediaDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataMedia>
+	public static class Parser implements DatabaseObjectParser<BuntataMedia>
 	{
 		public static final class Inst
 		{

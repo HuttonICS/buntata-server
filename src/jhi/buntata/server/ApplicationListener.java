@@ -26,6 +26,9 @@ import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link ApplicationListener} is the main {@link ServletContextListener}. It schedules {@link DatasourceSizeJob}s set given intervals to update the
+ * {@link Datasource} information.
+ *
  * @author Sebastian Raubach
  */
 public class ApplicationListener implements ServletContextListener
@@ -35,6 +38,7 @@ public class ApplicationListener implements ServletContextListener
 	@Override
 	public void contextInitialized(ServletContextEvent sce)
 	{
+		// Start the scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(new DatasourceSizeJob(), 0, 15, TimeUnit.MINUTES);
 	}
@@ -44,6 +48,7 @@ public class ApplicationListener implements ServletContextListener
 	{
 		try
 		{
+			// Stop the scheduler
 			scheduler.shutdownNow();
 		}
 		catch (Exception e)
@@ -52,17 +57,21 @@ public class ApplicationListener implements ServletContextListener
 		}
 	}
 
-	public static class DatasourceSizeJob implements Runnable
+	/**
+	 * This {@link Runnable} updates the data size information of all {@link Datasource} objects by checking their {@link BuntataMedia} objects and
+	 * summing over their size.
+	 */
+	private static class DatasourceSizeJob implements Runnable
 	{
-		private DatasourceDAO datasourceDAO = new DatasourceDAO();
-		private NodeDAO       nodeDAO       = new NodeDAO();
-		private MediaDAO      mediaDAO      = new MediaDAO();
+		private final DatasourceDAO datasourceDAO = new DatasourceDAO();
+		private final NodeDAO       nodeDAO       = new NodeDAO();
+		private final MediaDAO      mediaDAO      = new MediaDAO();
 
 		@Override
 		public void run()
 		{
 			// Get all the data sources
-			List<BuntataDatasource> datasources = datasourceDAO.getAll();
+			List<BuntataDatasource> datasources = datasourceDAO.getAll(true);
 
 			for (BuntataDatasource datasource : datasources)
 			{

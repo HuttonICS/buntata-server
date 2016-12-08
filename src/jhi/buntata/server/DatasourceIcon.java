@@ -23,18 +23,18 @@ import org.restlet.resource.*;
 import java.io.*;
 import java.util.*;
 
-import javax.activation.*;
-
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link ServerResource} handling {@link BuntataDatasource} icon requests.
+ *
  * @author Sebastian Raubach
  */
 public class DatasourceIcon extends ServerResource
 {
-	private DatasourceDAO dao = new DatasourceDAO();
-	private int           id  = -1;
+	private final DatasourceDAO dao = new DatasourceDAO();
+	private       int           id  = -1;
 
 	@Override
 	public void doInit()
@@ -59,16 +59,16 @@ public class DatasourceIcon extends ServerResource
 
 		if (datasource.size() > 0)
 		{
+			// Get the icon
 			String icon = datasource.get(0).getIcon();
 
 			if (icon != null)
 			{
 				File file = new File(icon);
 
+				// Check if the icon exists
 				if (file.exists() && file.isFile())
 				{
-					MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
-					String mimeTypeStr = mimeTypesMap.getContentType(file);
 					MediaType mt = MediaType.IMAGE_ALL;
 					representation = new FileRepresentation(file, mt);
 
@@ -80,6 +80,7 @@ public class DatasourceIcon extends ServerResource
 			}
 		}
 
+		// Return the result
 		return representation;
 	}
 }

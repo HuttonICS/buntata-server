@@ -21,9 +21,9 @@ import java.sql.*;
 /**
  * @author Sebastian Raubach
  */
-public class DatabaseUtils
+class DatabaseUtils
 {
-	public static PreparedStatement getByIdStatement(Connection con, String query, int id) throws SQLException
+	static PreparedStatement getByIdStatement(Connection con, String query, int id) throws SQLException
 	{
 		PreparedStatement stmt = con.prepareStatement(query);
 		stmt.setInt(1, id);
@@ -31,7 +31,7 @@ public class DatabaseUtils
 		return stmt;
 	}
 
-	public static PreparedStatement getByIdStringStatement(Connection con, String query, int id, String... values) throws SQLException
+	static PreparedStatement getByIdStringStatement(Connection con, String query, int id, String... values) throws SQLException
 	{
 		PreparedStatement stmt = con.prepareStatement(query);
 		int i=1;
@@ -42,7 +42,7 @@ public class DatabaseUtils
 		return stmt;
 	}
 
-	public static PreparedStatement updateByIdLongStatement(Connection con, String query, int id, long... values) throws SQLException
+	static PreparedStatement updateByIdLongStatement(Connection con, String query, int id, long... values) throws SQLException
 	{
 		PreparedStatement stmt = con.prepareStatement(query);
 		int i=1;

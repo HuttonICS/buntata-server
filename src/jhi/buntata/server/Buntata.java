@@ -25,14 +25,17 @@ import org.restlet.service.*;
 import java.util.*;
 
 /**
+ * {@link Buntata} is the main Restlet {@link Application}. It handles the routing of the incoming requests.
+ *
  * @author Sebastian Raubach
  */
 public class Buntata extends Application
 {
 	public Buntata()
 	{
-		setName("Buntàta Server");
-		setDescription("This is the server implementation for Buntàta");
+		// Set information about API
+		setName("Buntata Server");
+		setDescription("This is the server implementation for Buntata");
 		setOwner("The James Hutton Institute");
 		setAuthor("Sebastian Raubach, Information & Computational Sciences");
 	}
@@ -40,15 +43,19 @@ public class Buntata extends Application
 	@Override
 	public Restlet createInboundRoot()
 	{
+		// Create new router
 		Router router = new Router(getContext());
 
+		// Set the encoder
 		Filter encoder = new Encoder(getContext(), false, true, new EncoderService(true));
 		encoder.setNext(router);
+		// Set the Cors filter
 		CorsFilter corsFilter = new CorsFilter(getContext(), encoder);
 		corsFilter.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
 		corsFilter.setAllowedCredentials(true);
 		corsFilter.setSkippingResourceForCorsOptions(false);
 
+		// Attach the url handlers
 		attachToRouter(router, "/datasource", Datasource.class);
 		attachToRouter(router, "/datasource/{id}", Datasource.class);
 		attachToRouter(router, "/datasource/{id}/icon", DatasourceIcon.class);

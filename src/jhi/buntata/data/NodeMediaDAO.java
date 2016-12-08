@@ -25,7 +25,7 @@ import jhi.buntata.resource.*;
  */
 public class NodeMediaDAO
 {
-	public static class Writer extends DatabaseObjectWriter<BuntataNodeMedia>
+	public static class Writer implements DatabaseObjectWriter<BuntataNodeMedia>
 	{
 		public static final class Inst
 		{
@@ -69,7 +69,7 @@ public class NodeMediaDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataNodeMedia>
+	public static class Parser implements DatabaseObjectParser<BuntataNodeMedia>
 	{
 		public static final class Inst
 		{

@@ -25,7 +25,7 @@ import jhi.buntata.resource.*;
  */
 public class MediaTypeDAO
 {
-	public static class Writer extends DatabaseObjectWriter<BuntataMediaType>
+	public static class Writer implements DatabaseObjectWriter<BuntataMediaType>
 	{
 		public static final class Inst
 		{
@@ -68,7 +68,7 @@ public class MediaTypeDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataMediaType>
+	public static class Parser implements DatabaseObjectParser<BuntataMediaType>
 	{
 		public static final class Inst
 		{

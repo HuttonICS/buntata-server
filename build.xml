@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<project name="Knodel" default="compile8" basedir=".">
+<project name="Buntata" default="compile8" basedir=".">
 
 	<property file="build-wildcat.properties"/>
 

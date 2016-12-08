@@ -25,7 +25,7 @@ import jhi.buntata.resource.*;
  */
 public class AttributeValueDAO
 {
-	public static class Writer extends DatabaseObjectWriter<BuntataAttributeValue>
+	public static class Writer implements DatabaseObjectWriter<BuntataAttributeValue>
 	{
 		public static final class Inst
 		{
@@ -70,7 +70,7 @@ public class AttributeValueDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataAttributeValue>
+	public static class Parser implements DatabaseObjectParser<BuntataAttributeValue>
 	{
 		public static final class Inst
 		{

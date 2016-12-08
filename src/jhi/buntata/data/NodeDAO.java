@@ -47,7 +47,7 @@ public class NodeDAO
 		return result;
 	}
 
-	public static class Writer extends DatabaseObjectWriter<BuntataNode>
+	public static class Writer implements DatabaseObjectWriter<BuntataNode>
 	{
 		public static final class Inst
 		{
@@ -92,7 +92,7 @@ public class NodeDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataNode>
+	public static class Parser implements DatabaseObjectParser<BuntataNode>
 	{
 		public static final class Inst
 		{

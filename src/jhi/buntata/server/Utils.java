@@ -14,37 +14,40 @@
  * limitations under the License.
  */
 
-package jhi.buntata.data;
+package jhi.buntata.server;
 
-import javax.naming.*;
-import javax.sql.*;
+import java.io.*;
 
 /**
- * Singleton object to wrap the connection to the Database. We connect to the database using JNDI which looks up a
- * pre-defined database setup held on the server. Removes need of application / build to know about the database
- * beyond which name we access it using.
+ * A bunch of utility methods.
+ *
+ * @author Sebastian Raubach
  */
-enum Database
+class Utils
 {
-	INSTANCE;
-
-	private DataSource mySqlDataSource;
-
-	Database()
+	/**
+	 * Deletes a directory recursively. All files and directories under this directory will be deleted.
+	 *
+	 * @param dir The directory to delete
+	 */
+	static void deleteDirectory(File dir)
 	{
-		try
+		if (dir != null && dir.isDirectory() && dir.exists())
 		{
-			Context ctx = new InitialContext();
-			mySqlDataSource = (DataSource) ctx.lookup("java:comp/env/jdbc/database");
-		}
-		catch (NamingException e)
-		{
-			e.printStackTrace();
-		}
-	}
+			File[] files = dir.listFiles();
 
-	DataSource getMySQLDataSource()
-	{
-		return mySqlDataSource;
+			if (files != null)
+			{
+				for (File file : files)
+				{
+					if (file.isFile() && file.exists())
+						file.delete();
+					else if (file.isDirectory() && file.exists())
+						deleteDirectory(file);
+				}
+			}
+
+			dir.delete();
+		}
 	}
 }

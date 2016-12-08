@@ -24,12 +24,14 @@ import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link ServerResource} handling {@link Datasource} requests.
+ *
  * @author Sebastian Raubach
  */
 public class Datasource extends ServerResource
 {
-	private DatasourceDAO dao = new DatasourceDAO();
-	private int           id  = -1;
+	private final DatasourceDAO dao = new DatasourceDAO();
+	private       int           id  = -1;
 
 	@Override
 	public void doInit()
@@ -48,8 +50,8 @@ public class Datasource extends ServerResource
 	@Get("json")
 	public List<BuntataDatasource> getJson()
 	{
-		if(id == -1)
-			return dao.getAll();
+		if (id == -1)
+			return dao.getAll(false);
 		else
 			return dao.get(id);
 	}

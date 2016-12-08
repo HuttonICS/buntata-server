@@ -26,12 +26,12 @@ import jhi.buntata.resource.*;
  */
 public class DatasourceDAO
 {
-	public List<BuntataDatasource> getAll()
+	public List<BuntataDatasource> getAll(boolean includeInvisible)
 	{
 		List<BuntataDatasource> result = new ArrayList<>();
 
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = con.prepareStatement("SELECT * FROM datasources");
+			 PreparedStatement stmt = con.prepareStatement(includeInvisible ? "SELECT * FROM datasources" : "SELECT * FROM datasources WHERE visibility = 1");
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
@@ -52,7 +52,7 @@ public class DatasourceDAO
 		List<BuntataDatasource> result = new ArrayList<>();
 
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM datasources WHERE id = ?", id);
+			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM datasources WHERE visibility = 1 AND id = ?", id);
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
@@ -82,7 +82,7 @@ public class DatasourceDAO
 	}
 
 
-	public static class Parser extends DatabaseObjectParser<BuntataDatasource>
+	public static class Parser implements DatabaseObjectParser<BuntataDatasource>
 	{
 		public static final class Inst
 		{
@@ -122,7 +122,7 @@ public class DatasourceDAO
 		}
 	}
 
-	public static class Writer extends DatabaseObjectWriter<BuntataDatasource>
+	public static class Writer implements DatabaseObjectWriter<BuntataDatasource>
 	{
 		public static final class Inst
 		{

@@ -21,25 +21,28 @@ import java.net.*;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.*;
 
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link MySqlToSqLiteConverter} converts the information for a single data source from MySQL to SQLite. <p> This is all run outside of Tomcat to
+ * avoid loading the SQLite driver, which would lead to problems when trying to re-deploy applications as the driver uses native libraries.
+ *
  * @author Sebastian Raubach
  */
 public class MySqlToSqLiteConverter
 {
-	private File source;
-	private File target;
-	private File folder;
+	private final File target;
+	private final File folder;
 
 	private Connection sourceConnection;
 	private Connection targetConnection;
 
-	private String database;
-	private String username;
-	private String password;
+	private final String database;
+	private final String username;
+	private final String password;
 
 	public static void main(String[] args) throws IOException, URISyntaxException, SQLException
 	{
@@ -48,50 +51,77 @@ public class MySqlToSqLiteConverter
 		new MySqlToSqLiteConverter(Integer.parseInt(args[i++]), Boolean.parseBoolean(args[i++]), new File(args[i++]), new File(args[i++]), args[i++], args[i++], args[i++]);
 	}
 
-	public MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password) throws URISyntaxException, IOException, SQLException
+	/**
+	 * Creates a new {@link MySqlToSqLiteConverter}
+	 *
+	 * @param id            The id of the {@link jhi.buntata.server.Datasource}
+	 * @param includeVideos Should videos be exported as well?
+	 * @param source        The source SQLite template database
+	 * @param target        The target SQLite database (what gets downloaded)
+	 * @param database      The MySQL database
+	 * @param username      The MySQL username
+	 * @param password      The MySQL password
+	 * @throws IOException  Thrown if any file i/o operation fails
+	 * @throws SQLException Thrown if any database interaction fails
+	 */
+	private MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password) throws IOException, SQLException
 	{
-		this.source = source;
 		this.target = target;
 		this.folder = target.getParentFile();
 		this.database = database;
 		this.username = username;
 		this.password = password;
 
-//		System.out.println("Reading from: " + this.source.getAbsolutePath());
-//		System.out.println("Writing to: " + this.target.getAbsolutePath());
-
+		// Copy the template database to a new location. Then write to it later.
 		Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
+		// Establish the database connections
 		sourceConnection = getSourceConnection();
 		targetConnection = getTargetConnection();
 
+		// Copy the data source
 		copyDataSources(id);
+		// Copy all the nodes of this data source, then get their ids
 		List<Integer> nodeIds = copyNodes(id);
+		// Copy all the attributes for the node ids, then get their ids
 		List<Integer> attributeIds = copyAttributes(nodeIds);
+		// Copy all the attribute data for the node and attribute ids
 		copyAttributeData(nodeIds, attributeIds);
+		// Copy all the media types, then get their ids
 		List<Integer> mediaTypeIds = copyMediaTypes(nodeIds);
+		// Copy all the media items, then get their ids
 		List<Integer> mediaIds = copyMedia(nodeIds, mediaTypeIds, includeVideos);
+		// Copy all the node-media relationships
 		copyNodeMedia(nodeIds, mediaIds);
+		// Copy all the node-node relationships
 		copyRelationships(nodeIds);
 
+		/* Close the connections */
 		sourceConnection.close();
 		targetConnection.close();
 	}
 
+	/**
+	 * Creates an SQL placeholder of the given size, e.g. passing 4 will return <code>"?, ?, ?, ?</code>
+	 *
+	 * @param size The number of placeholder items
+	 * @return The generated String
+	 */
 	private String getFormattedPlaceholder(int size)
 	{
 		if (size < 1)
 			return "";
 
-		StringBuilder builder = new StringBuilder();
-		builder.append("?");
-
-		for (int i = 1; i < size; i++)
-			builder.append(", ?");
-
-		return builder.toString();
+		return IntStream.range(0, size)
+						.mapToObj(i -> "?")
+						.collect(Collectors.joining(", "));
 	}
 
+	/**
+	 * Copies the {@link BuntataRelationship} objects between the given {@link BuntataNode} ids.
+	 *
+	 * @param nodeIds The {@link BuntataNode} ids
+	 */
 	private void copyRelationships(List<Integer> nodeIds)
 	{
 		if (nodeIds.size() < 1)
@@ -122,6 +152,12 @@ public class MySqlToSqLiteConverter
 		}
 	}
 
+	/**
+	 * Copies the {@link BuntataNodeMedia} objects between the given {@link BuntataNode} and {@link BuntataMedia} ids.
+	 *
+	 * @param nodeIds  The {@link BuntataNode} ids
+	 * @param mediaIds The {@link BuntataMedia} ids
+	 */
 	private void copyNodeMedia(List<Integer> nodeIds, List<Integer> mediaIds)
 	{
 		if (nodeIds.size() < 1 || mediaIds.size() < 1)
@@ -152,6 +188,14 @@ public class MySqlToSqLiteConverter
 		}
 	}
 
+	/**
+	 * Copies the {@link BuntataMedia} for the given {@link BuntataNode} and {@link BuntataMediaType} ids.
+	 *
+	 * @param nodeIds       The {@link BuntataNode} ids
+	 * @param mediaTypeIds  The {@link BuntataMediaType} ids
+	 * @param includeVideos Should videos be included?
+	 * @return The ids of the {@link BuntataMedia} objects that have been copied
+	 */
 	private List<Integer> copyMedia(List<Integer> nodeIds, List<Integer> mediaTypeIds, boolean includeVideos)
 	{
 		List<Integer> ids = new ArrayList<>();
@@ -189,7 +233,7 @@ public class MySqlToSqLiteConverter
 				}
 				rsTemp.close();
 
-				// Skip videos if this has been requested by the client
+				// Set the internal link of videos to null if this has been requested by the client. The external link will still be available (YouTube, etc.)
 				if (isVideo && !includeVideos)
 				{
 					media.setInternalLink(null);
@@ -223,6 +267,12 @@ public class MySqlToSqLiteConverter
 		return ids;
 	}
 
+	/**
+	 * Copy the {@link BuntataMediaType}s for the given {@link BuntataNode} ids
+	 *
+	 * @param nodeIds The {@link BuntataNode} ids
+	 * @return The ids of the copied {@link BuntataMediaType}s
+	 */
 	private List<Integer> copyMediaTypes(List<Integer> nodeIds)
 	{
 		List<Integer> ids = new ArrayList<>();
@@ -257,6 +307,12 @@ public class MySqlToSqLiteConverter
 		return ids;
 	}
 
+	/**
+	 * Copies the {@link BuntataAttributeValue}s for the given {@link BuntataNode} and {@link BuntataAttribute} ids
+	 *
+	 * @param nodeIds      The {@link BuntataNode} ids
+	 * @param attributeIds The {@link BuntataAttribute} ids
+	 */
 	private void copyAttributeData(List<Integer> nodeIds, List<Integer> attributeIds)
 	{
 		if (nodeIds.size() < 1 || attributeIds.size() < 1)
@@ -287,6 +343,12 @@ public class MySqlToSqLiteConverter
 		}
 	}
 
+	/**
+	 * Copies the {@link BuntataAttribute}s for the given {@link BuntataNode} ids
+	 *
+	 * @param nodeIds The {@link BuntataNode} ids
+	 * @return The ids of the copied {@link BuntataAttribute}s
+	 */
 	private List<Integer> copyAttributes(List<Integer> nodeIds)
 	{
 		List<Integer> ids = new ArrayList<>();
@@ -321,6 +383,12 @@ public class MySqlToSqLiteConverter
 		return ids;
 	}
 
+	/**
+	 * Copies the {@link BuntataNode}s for the given {@link BuntataDatasource} id
+	 *
+	 * @param id The {@link BuntataDatasource} id
+	 * @return The ids of the copied {@link BuntataNode}s
+	 */
 	private List<Integer> copyNodes(int id)
 	{
 		List<Integer> ids = new ArrayList<>();
@@ -345,6 +413,11 @@ public class MySqlToSqLiteConverter
 		return ids;
 	}
 
+	/**
+	 * Copies the {@link BuntataDatasource} with the given id
+	 *
+	 * @param id The {@link BuntataDatasource} id
+	 */
 	private void copyDataSources(int id)
 	{
 		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM datasources WHERE id = " + id);
@@ -363,6 +436,11 @@ public class MySqlToSqLiteConverter
 		}
 	}
 
+	/**
+	 * Establish a connection to the source MySQL database
+	 *
+	 * @return The {@link Connection} to the source MySQL database
+	 */
 	private Connection getSourceConnection()
 	{
 		try
@@ -378,6 +456,11 @@ public class MySqlToSqLiteConverter
 		return null;
 	}
 
+	/**
+	 * Establish a connection to the target SQLite database
+	 *
+	 * @return The {@link Connection} to the target SQLite database
+	 */
 	private Connection getTargetConnection()
 	{
 		try

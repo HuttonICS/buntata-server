@@ -23,6 +23,7 @@ import org.restlet.resource.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.logging.*;
 import java.util.zip.*;
 
 import javax.activation.*;
@@ -31,11 +32,13 @@ import javax.servlet.*;
 import jhi.buntata.sqlite.*;
 
 /**
+ * {@link ServerResource} handlind {@link Datasource} download.
+ *
  * @author Sebastian Raubach
  */
 public class DatasourceDownload extends ServerResource
 {
-	private int id = -1;
+	private int     id            = -1;
 	private boolean includeVideos = true;
 
 	@Override
@@ -43,6 +46,7 @@ public class DatasourceDownload extends ServerResource
 	{
 		super.doInit();
 
+		// Try to parse the id
 		try
 		{
 			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
@@ -51,10 +55,11 @@ public class DatasourceDownload extends ServerResource
 		{
 		}
 
+		// Try to check if the parameter for "includevideos" has been set
 		try
 		{
 			String queryValue = getQueryValue("includevideos");
-			if(queryValue != null)
+			if (queryValue != null)
 				this.includeVideos = Boolean.parseBoolean(queryValue);
 		}
 		catch (NullPointerException e)
@@ -66,12 +71,16 @@ public class DatasourceDownload extends ServerResource
 	public FileRepresentation getFile()
 	{
 		FileRepresentation representation = null;
+
+		// Check if the id is set
 		if (id != -1)
 		{
+			// Export the data to the SQLite file
 			File file = createFile();
 
 			if (file != null)
 			{
+				// Prepare the result
 				MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 				String mimeTypeStr = mimeTypesMap.getContentType(file);
 				MediaType mt = new MediaType(mimeTypeStr);
@@ -81,6 +90,7 @@ public class DatasourceDownload extends ServerResource
 				disp.setFilename("datasource-" + id + ".zip");
 				disp.setSize(file.length());
 				representation.setDisposition(disp);
+				representation.setAutoDeleting(true);
 			}
 		}
 
@@ -88,8 +98,8 @@ public class DatasourceDownload extends ServerResource
 	}
 
 	/**
-	 * Extracts the relevant information from MySQL to Sqlite. This has been moved to a Tomcat-external jar so that the Sqlite JDBC driver doesn't
-	 * conflict with the way Tomcat works. To make it work without this workaround, one would need to move the Sqlite JDBC jar to Tomcat's own lib
+	 * Extracts the relevant information from MySQL to SQLite. This has been moved to a Tomcat-external jar so that the Sqlite JDBC driver doesn't
+	 * conflict with the way Tomcat works. To make it work without this workaround, one would need to move the SQLite JDBC jar to Tomcat's own lib
 	 * folder rather than the apps lib folder.
 	 */
 	private File createFile()
@@ -125,13 +135,14 @@ public class DatasourceDownload extends ServerResource
 			Process process = processBuilder.start();
 
 			// Wait for it
-			System.out.println("Exit value: " + process.waitFor());
+			Logger.getLogger("").log(Level.INFO, "Exit value: " + process.waitFor());
 
 			// Zip it
 			File zipFile = File.createTempFile("buntata-datasource-" + id + "-", ".zip");
 			zipIt(folder, zipFile);
 
-			folder.delete();
+			// Delete temp files
+			Utils.deleteDirectory(folder);
 
 			return zipFile;
 		}
@@ -143,21 +154,25 @@ public class DatasourceDownload extends ServerResource
 		return null;
 	}
 
-	public void zipIt(File sourceFolder, File targetFile)
+	/**
+	 * Zips the given source folder into the given target file
+	 *
+	 * @param sourceFolder The source {@link File} (folder)
+	 * @param targetFile   The target {@link File}
+	 */
+	private void zipIt(File sourceFolder, File targetFile)
 	{
 		byte[] buffer = new byte[1024];
 
 		try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(targetFile)))
 		{
-//			System.out.println("Output to Zip : " + targetFile);
-
 			List<File> fileList = new ArrayList<>();
 
 			generateFileList(fileList, sourceFolder);
 
+			// Add all the files to the zip file
 			for (File file : fileList)
 			{
-//				System.out.println("File Added : " + file);
 				ZipEntry ze = new ZipEntry(file.getName());
 				zos.putNextEntry(ze);
 				try (FileInputStream fis = new FileInputStream(file))
@@ -171,7 +186,6 @@ public class DatasourceDownload extends ServerResource
 			}
 
 			zos.closeEntry();
-//			System.out.println("Folder successfully compressed");
 		}
 		catch (IOException e)
 		{
@@ -187,6 +201,7 @@ public class DatasourceDownload extends ServerResource
 			result.add(parent);
 		}
 
+		// Recursively add files
 		if (parent.isDirectory())
 		{
 			File[] children = parent.listFiles();

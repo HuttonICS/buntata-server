@@ -25,7 +25,7 @@ import jhi.buntata.resource.*;
  */
 public class RelationshipDAO
 {
-	public static class Writer extends DatabaseObjectWriter<BuntataRelationship>
+	public static class Writer implements DatabaseObjectWriter<BuntataRelationship>
 	{
 		public static final class Inst
 		{
@@ -69,7 +69,7 @@ public class RelationshipDAO
 		}
 	}
 
-	public static class Parser extends DatabaseObjectParser<BuntataRelationship>
+	public static class Parser implements DatabaseObjectParser<BuntataRelationship>
 	{
 		public static final class Inst
 		{

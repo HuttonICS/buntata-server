@@ -21,10 +21,12 @@ import java.sql.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link DatabaseObjectParser} is an interface defining how a {@link DatabaseObject} should be parsed.
+ *
  * @author Sebastian Raubach
  */
 
-public abstract class DatabaseObjectParser<T extends DatabaseObject>
+interface DatabaseObjectParser<T extends DatabaseObject>
 {
-	public abstract T parse(ResultSet rs) throws SQLException;
+	T parse(ResultSet rs) throws SQLException;
 }

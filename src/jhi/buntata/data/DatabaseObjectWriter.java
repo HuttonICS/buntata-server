@@ -21,10 +21,12 @@ import java.sql.*;
 import jhi.buntata.resource.*;
 
 /**
+ * {@link DatabaseObjectWriter} is an interface defining how a {@link DatabaseObject} should be written.
+ *
  * @author Sebastian Raubach
  */
 
-public abstract class DatabaseObjectWriter<T extends DatabaseObject>
+interface DatabaseObjectWriter<T extends DatabaseObject>
 {
-	public abstract void write(T object, PreparedStatement stmt) throws SQLException;
+	void write(T object, PreparedStatement stmt) throws SQLException;
 }
