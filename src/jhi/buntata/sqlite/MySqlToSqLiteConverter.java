@@ -427,6 +427,23 @@ public class MySqlToSqLiteConverter
 			if (rs.next())
 			{
 				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs);
+
+				File icon = new File(ds.getIcon());
+
+				// Now copy the media file
+				if (icon.exists() && icon.isFile())
+				{
+					try
+					{
+						Files.copy(icon.toPath(), new File(folder, icon.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+						ds.setIcon(icon.getName());
+					}
+					catch (IOException e)
+					{
+						e.printStackTrace();
+					}
+				}
+
 				DatasourceDAO.Writer.Inst.get().write(ds, targetStmt);
 			}
 		}
