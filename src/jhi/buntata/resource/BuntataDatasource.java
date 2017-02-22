@@ -29,6 +29,7 @@ public class BuntataDatasource extends DatabaseObject
 	public static final String TABLE_NAME           = "datasources";
 	public static final String FIELD_NAME           = "name";
 	public static final String FIELD_DESCRIPTION    = "description";
+	public static final String FIELD_VISIBILITY     = "visibility";
 	public static final String FIELD_VERSION_NUMBER = "version_number";
 	public static final String FIELD_DATA_PROVIDER  = "data_provider";
 	public static final String FIELD_CONTACT        = "contact";
@@ -39,6 +40,7 @@ public class BuntataDatasource extends DatabaseObject
 
 	private String  name;
 	private String  description;
+	private boolean visibility = true;
 	private int     versionNumber;
 	private String  dataProvider;
 	private String  contact;
@@ -56,17 +58,19 @@ public class BuntataDatasource extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, int versionNumber, String dataProvider, String contact, boolean showKeyName, String icon, long sizeTotal)
+	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, boolean visibility, int versionNumber, String dataProvider, String contact, boolean showKeyName, String icon, long sizeTotal, long sizeNoVideo)
 	{
 		super(id, createdOn, updatedOn);
 		this.name = name;
 		this.description = description;
+		this.visibility = visibility;
 		this.versionNumber = versionNumber;
 		this.dataProvider = dataProvider;
 		this.contact = contact;
 		this.showKeyName = showKeyName;
 		this.icon = icon;
 		this.sizeTotal = sizeTotal;
+		this.sizeNoVideo = sizeNoVideo;
 	}
 
 	public String getName()
@@ -88,6 +92,17 @@ public class BuntataDatasource extends DatabaseObject
 	public BuntataDatasource setDescription(String description)
 	{
 		this.description = description;
+		return this;
+	}
+
+	public boolean isVisibility()
+	{
+		return visibility;
+	}
+
+	public BuntataDatasource setVisibility(boolean visibility)
+	{
+		this.visibility = visibility;
 		return this;
 	}
 
@@ -174,6 +189,7 @@ public class BuntataDatasource extends DatabaseObject
 		return "BuntataDatasource{" +
 				"name='" + name + '\'' +
 				", description='" + description + '\'' +
+				", visibility=" + visibility +
 				", versionNumber=" + versionNumber +
 				", dataProvider='" + dataProvider + '\'' +
 				", contact='" + contact + '\'' +

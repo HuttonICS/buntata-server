@@ -50,9 +50,16 @@ public class Datasource extends ServerResource
 	@Get("json")
 	public List<BuntataDatasource> getJson()
 	{
+		List<BuntataDatasource> result = new ArrayList<>();
 		if (id == -1)
-			return dao.getAll(false);
+			result = dao.getAll(false);
 		else
-			return dao.get(id);
+		{
+			BuntataDatasource ds = dao.get(id);
+			if (ds != null)
+				result.add(ds);
+		}
+
+		return result;
 	}
 }

@@ -47,9 +47,9 @@ public class DatasourceDAO
 		return result;
 	}
 
-	public List<BuntataDatasource> get(int id)
+	public BuntataDatasource get(int id)
 	{
-		List<BuntataDatasource> result = new ArrayList<>();
+		BuntataDatasource result = null;
 
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
 			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM datasources WHERE visibility = 1 AND id = ?", id);
@@ -57,7 +57,7 @@ public class DatasourceDAO
 		{
 			while (rs.next())
 			{
-				result.add(Parser.Inst.get().parse(rs));
+				result = Parser.Inst.get().parse(rs);
 			}
 		}
 		catch (SQLException e)
@@ -112,6 +112,7 @@ public class DatasourceDAO
 			return new BuntataDatasource(rs.getInt(BuntataDatasource.FIELD_ID), rs.getTimestamp(BuntataDatasource.FIELD_CREATED_ON), rs.getTimestamp(BuntataDatasource.FIELD_UPDATED_ON))
 					.setName(rs.getString(BuntataDatasource.FIELD_NAME))
 					.setDescription(rs.getString(BuntataDatasource.FIELD_DESCRIPTION))
+					.setVisibility(rs.getBoolean(BuntataDatasource.FIELD_VISIBILITY))
 					.setVersionNumber(rs.getInt(BuntataDatasource.FIELD_VERSION_NUMBER))
 					.setDataProvider(rs.getString(BuntataDatasource.FIELD_DATA_PROVIDER))
 					.setContact(rs.getString(BuntataDatasource.FIELD_CONTACT))

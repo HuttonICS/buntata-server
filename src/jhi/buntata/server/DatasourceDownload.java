@@ -29,6 +29,8 @@ import java.util.zip.*;
 import javax.activation.*;
 import javax.servlet.*;
 
+import jhi.buntata.data.*;
+import jhi.buntata.resource.*;
 import jhi.buntata.sqlite.*;
 
 /**
@@ -38,8 +40,9 @@ import jhi.buntata.sqlite.*;
  */
 public class DatasourceDownload extends ServerResource
 {
-	private int     id            = -1;
-	private boolean includeVideos = true;
+	private int           id            = -1;
+	private boolean       includeVideos = true;
+	private DatasourceDAO dao           = new DatasourceDAO();
 
 	@Override
 	public void doInit()
@@ -75,23 +78,30 @@ public class DatasourceDownload extends ServerResource
 		// Check if the id is set
 		if (id != -1)
 		{
-			// Export the data to the SQLite file
-			File file = createFile();
+			BuntataDatasource ds = dao.get(id);
 
-			if (file != null)
+			if (ds != null)
 			{
-				// Prepare the result
-				MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
-				String mimeTypeStr = mimeTypesMap.getContentType(file);
-				MediaType mt = new MediaType(mimeTypeStr);
-				representation = new FileRepresentation(file, mt);
+				// Export the data to the SQLite file
+				File file = createFile();
 
-				Disposition disp = new Disposition(Disposition.TYPE_ATTACHMENT);
-				disp.setFilename("datasource-" + id + ".zip");
-				disp.setSize(file.length());
-				representation.setDisposition(disp);
-				representation.setAutoDeleting(true);
+				if (file != null)
+				{
+					// Prepare the result
+					MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+					String mimeTypeStr = mimeTypesMap.getContentType(file);
+					MediaType mt = new MediaType(mimeTypeStr);
+					representation = new FileRepresentation(file, mt);
+
+					Disposition disp = new Disposition(Disposition.TYPE_ATTACHMENT);
+					disp.setFilename("datasource-" + id + ".zip");
+					disp.setSize(file.length());
+					representation.setDisposition(disp);
+					representation.setAutoDeleting(true);
+				}
 			}
+			else
+				throw new ResourceException(404);
 		}
 
 		return representation;

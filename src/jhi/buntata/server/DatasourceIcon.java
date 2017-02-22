@@ -21,7 +21,6 @@ import org.restlet.representation.*;
 import org.restlet.resource.*;
 
 import java.io.*;
-import java.util.*;
 
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
@@ -53,14 +52,14 @@ public class DatasourceIcon extends ServerResource
 	@Get
 	public FileRepresentation getImage()
 	{
-		List<BuntataDatasource> datasource = dao.get(id);
+		BuntataDatasource datasource = dao.get(id);
 
 		FileRepresentation representation = null;
 
-		if (datasource.size() > 0)
+		if (datasource != null)
 		{
 			// Get the icon
-			String icon = datasource.get(0).getIcon();
+			String icon = datasource.getIcon();
 
 			if (icon != null)
 			{
