@@ -128,11 +128,14 @@ public class ApplicationListener implements ServletContextListener
 					sizeNoVideo += imageSize;
 				}
 
-				// Set the size
-				datasource.setSizeTotal(sizeTotal);
-				datasource.setSizeNoVideo(sizeNoVideo);
-				// And save
-				datasourceDAO.updateSize(datasource);
+				// Only save changes if the values actually changed. This prevents the "updated_on" field to be modified if nothing really changed.
+				if (sizeTotal != datasource.getSizeTotal() || sizeNoVideo != datasource.getSizeNoVideo())
+				{
+					datasource.setSizeTotal(sizeTotal);
+					datasource.setSizeNoVideo(sizeNoVideo);
+					// And save
+					datasourceDAO.updateSize(datasource);
+				}
 			}
 		}
 	}
