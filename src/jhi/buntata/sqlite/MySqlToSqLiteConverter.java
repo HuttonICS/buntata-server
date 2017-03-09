@@ -95,6 +95,8 @@ public class MySqlToSqLiteConverter
 		copyNodeMedia(nodeIds, mediaIds);
 		// Copy all the node-node relationships
 		copyRelationships(nodeIds);
+		// Copy all the node-node similarities
+		copySimilarities(nodeIds);
 
 		/* Close the connections */
 		sourceConnection.close();
@@ -142,6 +144,41 @@ public class MySqlToSqLiteConverter
 			{
 				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs);
 				RelationshipDAO.Writer.Inst.get().write(relationship, targetStmt);
+			}
+
+			rs.close();
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Copies the {@link BuntataRelationship} objects between the given {@link BuntataNode} ids.
+	 *
+	 * @param nodeIds The {@link BuntataNode} ids
+	 */
+	private void copySimilarities(List<Integer> nodeIds)
+	{
+		if (nodeIds.size() < 1)
+			return;
+
+		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM similarities WHERE node_a_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND node_b_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")");
+			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `similarities` (`id`, `node_a_id`, `node_b_id`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)"))
+		{
+			int i = 1;
+			for (Integer id : nodeIds)
+				sourceStmt.setInt(i++, id);
+			for (Integer id : nodeIds)
+				sourceStmt.setInt(i++, id);
+
+			ResultSet rs = sourceStmt.executeQuery();
+
+			while (rs.next())
+			{
+				BuntataSimilarity similarity = SimilarityDAO.Parser.Inst.get().parse(rs);
+				SimilarityDAO.Writer.Inst.get().write(similarity, targetStmt);
 			}
 
 			rs.close();

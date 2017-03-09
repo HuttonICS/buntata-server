@@ -19,6 +19,7 @@ package jhi.buntata.server;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import javax.servlet.*;
 
@@ -67,9 +68,25 @@ public class ApplicationListener implements ServletContextListener
 		private final NodeDAO       nodeDAO       = new NodeDAO();
 		private final MediaDAO      mediaDAO      = new MediaDAO();
 
+		private Set<String> alreadyCounted = new HashSet<>();
+
+		private Predicate<File> filter = f ->
+		{
+			boolean result = f.exists() && f.isFile();
+
+			if (alreadyCounted.contains(f.getAbsolutePath()))
+				result = false;
+			else
+				alreadyCounted.add(f.getAbsolutePath());
+
+			return result;
+		};
+
 		@Override
 		public void run()
 		{
+			alreadyCounted.clear();
+
 			// Get all the data sources
 			List<BuntataDatasource> datasources = datasourceDAO.getAll(true);
 
@@ -81,8 +98,6 @@ public class ApplicationListener implements ServletContextListener
 				// Get all the nodes
 				List<BuntataNode> nodes = nodeDAO.getAllForDatasource(datasource);
 
-				Set<String> alreadyCounted = new HashSet<>();
-
 				for (BuntataNode node : nodes)
 				{
 					// Get all the media
@@ -91,17 +106,7 @@ public class ApplicationListener implements ServletContextListener
 					long imageSize = media.get(BuntataMediaType.TYPE_IMAGE)
 										  .parallelStream()
 										  .map(m -> new File(m.getInternalLink()))
-										  .filter(f ->
-										  {
-											  boolean result = f.exists() && f.isFile();
-
-											  if (alreadyCounted.contains(f.getAbsolutePath()))
-												  result = false;
-											  else
-												  alreadyCounted.add(f.getAbsolutePath());
-
-											  return result;
-										  })
+										  .filter(filter)
 										  .map(File::length)
 										  .mapToLong(Long::longValue)
 										  .sum();
@@ -109,17 +114,7 @@ public class ApplicationListener implements ServletContextListener
 					long videoSize = media.get(BuntataMediaType.TYPE_VIDEO)
 										  .parallelStream()
 										  .map(m -> new File(m.getInternalLink()))
-										  .filter(f ->
-										  {
-											  boolean result = f.exists() && f.isFile();
-
-											  if (alreadyCounted.contains(f.getAbsolutePath()))
-												  result = false;
-											  else
-												  alreadyCounted.add(f.getAbsolutePath());
-
-											  return result;
-										  })
+										  .filter(filter)
 										  .map(File::length)
 										  .mapToLong(Long::longValue)
 										  .sum();
