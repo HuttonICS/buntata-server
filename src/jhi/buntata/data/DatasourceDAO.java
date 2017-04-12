@@ -117,6 +117,7 @@ public class DatasourceDAO
 					.setDataProvider(rs.getString(BuntataDatasource.FIELD_DATA_PROVIDER))
 					.setContact(rs.getString(BuntataDatasource.FIELD_CONTACT))
 					.setShowKeyName(rs.getBoolean(BuntataDatasource.FIELD_SHOW_KEY_NAME))
+					.setShowSingleChild(rs.getBoolean(BuntataDatasource.FIELD_SHOW_SINGLE_CHILD))
 					.setIcon(rs.getString(BuntataDatasource.FIELD_ICON))
 					.setSizeTotal(rs.getLong(BuntataDatasource.FIELD_SIZE_TOTAL))
 					.setSizeNoVideo(rs.getLong(BuntataDatasource.FIELD_SIZE_NO_VIDEO));
@@ -158,6 +159,7 @@ public class DatasourceDAO
 			stmt.setString(i++, object.getDataProvider());
 			stmt.setString(i++, object.getContact());
 			stmt.setBoolean(i++, object.isShowKeyName());
+			stmt.setBoolean(i++, object.isShowSingleChild());
 			stmt.setString(i++, object.getIcon());
 			stmt.setLong(i++, object.getSizeTotal());
 			stmt.setLong(i++, object.getSizeNoVideo());

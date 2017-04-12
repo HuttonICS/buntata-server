@@ -26,25 +26,27 @@ import java.util.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BuntataDatasource extends DatabaseObject
 {
-	public static final String TABLE_NAME           = "datasources";
-	public static final String FIELD_NAME           = "name";
-	public static final String FIELD_DESCRIPTION    = "description";
-	public static final String FIELD_VISIBILITY     = "visibility";
-	public static final String FIELD_VERSION_NUMBER = "version_number";
-	public static final String FIELD_DATA_PROVIDER  = "data_provider";
-	public static final String FIELD_CONTACT        = "contact";
-	public static final String FIELD_SHOW_KEY_NAME  = "show_key_name";
-	public static final String FIELD_ICON           = "icon";
-	public static final String FIELD_SIZE_TOTAL     = "size_total";
-	public static final String FIELD_SIZE_NO_VIDEO  = "size_no_video";
+	public static final String TABLE_NAME              = "datasources";
+	public static final String FIELD_NAME              = "name";
+	public static final String FIELD_DESCRIPTION       = "description";
+	public static final String FIELD_VISIBILITY        = "visibility";
+	public static final String FIELD_VERSION_NUMBER    = "version_number";
+	public static final String FIELD_DATA_PROVIDER     = "data_provider";
+	public static final String FIELD_CONTACT           = "contact";
+	public static final String FIELD_SHOW_KEY_NAME     = "show_key_name";
+	public static final String FIELD_SHOW_SINGLE_CHILD = "show_single_child";
+	public static final String FIELD_ICON              = "icon";
+	public static final String FIELD_SIZE_TOTAL        = "size_total";
+	public static final String FIELD_SIZE_NO_VIDEO     = "size_no_video";
 
-	private String  name;
-	private String  description;
+	private String name;
+	private String description;
 	private boolean visibility = true;
 	private int     versionNumber;
 	private String  dataProvider;
 	private String  contact;
 	private boolean showKeyName;
+	private boolean showSingleChild;
 	private String  icon;
 	private long    sizeTotal;
 	private long    sizeNoVideo;
@@ -58,7 +60,7 @@ public class BuntataDatasource extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, boolean visibility, int versionNumber, String dataProvider, String contact, boolean showKeyName, String icon, long sizeTotal, long sizeNoVideo)
+	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, boolean visibility, int versionNumber, String dataProvider, String contact, boolean showKeyName, boolean showSingleChild, String icon, long sizeTotal, long sizeNoVideo)
 	{
 		super(id, createdOn, updatedOn);
 		this.name = name;
@@ -68,6 +70,7 @@ public class BuntataDatasource extends DatabaseObject
 		this.dataProvider = dataProvider;
 		this.contact = contact;
 		this.showKeyName = showKeyName;
+		this.showSingleChild = showSingleChild;
 		this.icon = icon;
 		this.sizeTotal = sizeTotal;
 		this.sizeNoVideo = sizeNoVideo;
@@ -150,6 +153,17 @@ public class BuntataDatasource extends DatabaseObject
 		return this;
 	}
 
+	public boolean isShowSingleChild()
+	{
+		return showSingleChild;
+	}
+
+	public BuntataDatasource setShowSingleChild(boolean showSingleChild)
+	{
+		this.showSingleChild = showSingleChild;
+		return this;
+	}
+
 	public String getIcon()
 	{
 		return icon;
@@ -187,13 +201,17 @@ public class BuntataDatasource extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataDatasource{" +
-				"name='" + name + '\'' +
+				"id=" + id +
+				", createdOn=" + createdOn +
+				", updatedOn=" + updatedOn +
+				", name='" + name + '\'' +
 				", description='" + description + '\'' +
 				", visibility=" + visibility +
 				", versionNumber=" + versionNumber +
 				", dataProvider='" + dataProvider + '\'' +
 				", contact='" + contact + '\'' +
 				", showKeyName=" + showKeyName +
+				", showSingleChild=" + showSingleChild +
 				", icon='" + icon + '\'' +
 				", sizeTotal=" + sizeTotal +
 				", sizeNoVideo=" + sizeNoVideo +
