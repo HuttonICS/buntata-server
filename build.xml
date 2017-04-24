@@ -108,7 +108,7 @@
 			<webinf dir="web/WEB-INF"/>
 			<lib dir="${lib}"/>
 
-			<zipfileset dir="res" includes="*database.db" prefix="WEB-INF"/>
+			<zipfileset dir="res" includes="*.*" prefix="WEB-INF"/>
 
 			<metainf file="web/context.xml"/>
 		</war>

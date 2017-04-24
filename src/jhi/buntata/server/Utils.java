@@ -23,14 +23,14 @@ import java.io.*;
  *
  * @author Sebastian Raubach
  */
-class Utils
+public class Utils
 {
 	/**
 	 * Deletes a directory recursively. All files and directories under this directory will be deleted.
 	 *
 	 * @param dir The directory to delete
 	 */
-	static void deleteDirectory(File dir)
+	public static void deleteDirectory(File dir)
 	{
 		if (dir != null && dir.isDirectory() && dir.exists())
 		{

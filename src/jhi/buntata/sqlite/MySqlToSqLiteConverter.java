@@ -75,6 +75,11 @@ public class MySqlToSqLiteConverter
 		// Copy the template database to a new location. Then write to it later.
 		Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
+		File copyrightSource = new File(source.getParentFile(), "copyright.txt");
+		File copyrightTarget = new File(target.getParentFile(), "copyright.txt");
+		if (copyrightSource.exists())
+			Files.copy(copyrightSource.toPath(), copyrightTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
 		// Establish the database connections
 		sourceConnection = getSourceConnection();
 		targetConnection = getTargetConnection();

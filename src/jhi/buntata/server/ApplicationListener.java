@@ -16,15 +16,11 @@
 
 package jhi.buntata.server;
 
-import java.io.*;
-import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 
 import javax.servlet.*;
 
-import jhi.buntata.data.*;
-import jhi.buntata.resource.*;
+import jhi.buntata.server.job.*;
 
 /**
  * {@link ApplicationListener} is the main {@link ServletContextListener}. It schedules {@link DatasourceSizeJob}s set given intervals to update the
@@ -42,6 +38,7 @@ public class ApplicationListener implements ServletContextListener
 		// Start the scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(new DatasourceSizeJob(), 0, 15, TimeUnit.MINUTES);
+		scheduler.scheduleAtFixedRate(new DatasourceExportJob(sce.getServletContext()), 0, 15, TimeUnit.MINUTES);
 	}
 
 	@Override
@@ -55,83 +52,6 @@ public class ApplicationListener implements ServletContextListener
 		catch (Exception e)
 		{
 			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * This {@link Runnable} updates the data size information of all {@link Datasource} objects by checking their {@link BuntataMedia} objects and
-	 * summing over their size.
-	 */
-	private static class DatasourceSizeJob implements Runnable
-	{
-		private final DatasourceDAO datasourceDAO = new DatasourceDAO();
-		private final NodeDAO       nodeDAO       = new NodeDAO();
-		private final MediaDAO      mediaDAO      = new MediaDAO();
-
-		private Set<String> alreadyCounted = new HashSet<>();
-
-		private Predicate<File> filter = f ->
-		{
-			boolean result = f.exists() && f.isFile();
-
-			if (alreadyCounted.contains(f.getAbsolutePath()))
-				result = false;
-			else
-				alreadyCounted.add(f.getAbsolutePath());
-
-			return result;
-		};
-
-		@Override
-		public void run()
-		{
-			alreadyCounted.clear();
-
-			// Get all the data sources
-			List<BuntataDatasource> datasources = datasourceDAO.getAll(true);
-
-			for (BuntataDatasource datasource : datasources)
-			{
-				long sizeTotal = 0;
-				long sizeNoVideo = 0;
-
-				// Get all the nodes
-				List<BuntataNode> nodes = nodeDAO.getAllForDatasource(datasource);
-
-				for (BuntataNode node : nodes)
-				{
-					// Get all the media
-					Map<String, List<BuntataMedia>> media = mediaDAO.getAllForNode(node);
-
-					long imageSize = media.get(BuntataMediaType.TYPE_IMAGE)
-										  .parallelStream()
-										  .map(m -> new File(m.getInternalLink()))
-										  .filter(filter)
-										  .map(File::length)
-										  .mapToLong(Long::longValue)
-										  .sum();
-
-					long videoSize = media.get(BuntataMediaType.TYPE_VIDEO)
-										  .parallelStream()
-										  .map(m -> new File(m.getInternalLink()))
-										  .filter(filter)
-										  .map(File::length)
-										  .mapToLong(Long::longValue)
-										  .sum();
-
-					sizeTotal += imageSize + videoSize;
-					sizeNoVideo += imageSize;
-				}
-
-				// Only save changes if the values actually changed. This prevents the "updated_on" field to be modified if nothing really changed.
-				if (sizeTotal != datasource.getSizeTotal() || sizeNoVideo != datasource.getSizeNoVideo())
-				{
-					datasource.setSizeTotal(sizeTotal);
-					datasource.setSizeNoVideo(sizeNoVideo);
-					// And save
-					datasourceDAO.updateSize(datasource);
-				}
-			}
 		}
 	}
 }

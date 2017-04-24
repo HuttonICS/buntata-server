@@ -1,0 +1,1 @@
+The images contained in this Buntata dataset are copyright of the James Hutton Institute (or other organisation indicated in the "media" table in the accompanying SQLite database). These images can be re-used providing there is no commercial gain and the copyright holder is acknowledged.
