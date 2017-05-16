@@ -38,7 +38,7 @@ public class DatasourceExportJob implements Runnable
 	private static final SimpleDateFormat SDF             = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 	private static final String           TEMP_SUB_FOLDER = "buntata-datasources";
 
-	private static final File TARGET_FOLDER = new File(System.getProperty("java.io.tmpdir"), TEMP_SUB_FOLDER);
+	private static File TARGET_FOLDER;
 
 	private final DatasourceDAO datasourceDAO = new DatasourceDAO();
 
@@ -48,6 +48,9 @@ public class DatasourceExportJob implements Runnable
 	{
 		this.servlet = servlet;
 
+		String version = servlet.getInitParameter("version");
+
+		TARGET_FOLDER = new File(System.getProperty("java.io.tmpdir"), TEMP_SUB_FOLDER + "-" + version);
 		TARGET_FOLDER.mkdirs();
 	}
 
@@ -65,8 +68,15 @@ public class DatasourceExportJob implements Runnable
 		if (date == null)
 			date = datasource.getCreatedOn();
 
-		File targetFileTrue = new File(TARGET_FOLDER, datasource.getId() + "-" + SDF.format(date) + "-true.zip");
-		File targetFileFalse = new File(TARGET_FOLDER, datasource.getId() + "-" + SDF.format(date) + "-false.zip");
+		File targetFileTrue;
+		File targetFileFalse;
+
+		/* Make sure to synchronize this as it'd cause race conditions otherwise */
+		synchronized (SDF)
+		{
+			targetFileTrue = new File(TARGET_FOLDER, datasource.getId() + "-" + SDF.format(date) + "-true.zip");
+			targetFileFalse = new File(TARGET_FOLDER, datasource.getId() + "-" + SDF.format(date) + "-false.zip");
+		}
 
 		// If the file doesn't exist, we need to create it.
 		if (!targetFileTrue.exists() || !targetFileFalse.exists())

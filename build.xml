@@ -101,6 +101,7 @@
 				<filter token="database.username" value="${database.username}"/>
 				<filter token="database.password" value="${database.password}"/>
 				<filter token="database.url" value="${database.url}"/>
+				<filter token="api.version" value="${api.version}"/>
 			</filterset>
 		</copy>
 
