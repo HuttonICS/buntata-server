@@ -31,9 +31,12 @@ public class BuntataNode extends DatabaseObject
 	public static final String FIELD_NAME          = "name";
 	public static final String FIELD_DESCRIPTION   = "description";
 
-	private Integer datasourceId;
-	private String  name;
-	private String  description;
+	private Integer                         datasourceId;
+	private String                          name;
+	private String                          description;
+	private Map<String, List<BuntataMedia>> media;
+	private List<BuntataAttributeValue>     attributeValues;
+	private List<BuntataNode>               similarNodes;
 
 	public BuntataNode()
 	{
@@ -42,14 +45,6 @@ public class BuntataNode extends DatabaseObject
 	public BuntataNode(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
-	}
-
-	public BuntataNode(int id, Date createdOn, Date updatedOn, Integer datasourceId, String name, String description)
-	{
-		super(id, createdOn, updatedOn);
-		this.datasourceId = datasourceId;
-		this.name = name;
-		this.description = description;
 	}
 
 	public Integer getDatasourceId()
@@ -85,6 +80,39 @@ public class BuntataNode extends DatabaseObject
 		return this;
 	}
 
+	public Map<String, List<BuntataMedia>> getMedia()
+	{
+		return media;
+	}
+
+	public BuntataNode setMedia(Map<String, List<BuntataMedia>> media)
+	{
+		this.media = media;
+		return this;
+	}
+
+	public List<BuntataAttributeValue> getAttributeValues()
+	{
+		return attributeValues;
+	}
+
+	public BuntataNode setAttributeValues(List<BuntataAttributeValue> attributeValues)
+	{
+		this.attributeValues = attributeValues;
+		return this;
+	}
+
+	public List<BuntataNode> getSimilarNodes()
+	{
+		return similarNodes;
+	}
+
+	public BuntataNode setSimilarNodes(List<BuntataNode> similarNodes)
+	{
+		this.similarNodes = similarNodes;
+		return this;
+	}
+
 	@Override
 	public String toString()
 	{
@@ -92,6 +120,9 @@ public class BuntataNode extends DatabaseObject
 				"datasourceId=" + datasourceId +
 				", name='" + name + '\'' +
 				", description='" + description + '\'' +
+				", media=" + media +
+				", attributeValues=" + attributeValues +
+				", similarNodes=" + similarNodes +
 				"} " + super.toString();
 	}
 }

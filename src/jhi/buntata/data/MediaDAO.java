@@ -26,7 +26,28 @@ import jhi.buntata.resource.*;
  */
 public class MediaDAO
 {
-	public Map<String, List<BuntataMedia>> getAllForNode(BuntataNode node)
+	public BuntataMedia get(int id)
+	{
+		BuntataMedia result = null;
+
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM media WHERE id = ?", id);
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result = Parser.Inst.get().parse(rs, true);
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	public Map<String, List<BuntataMedia>> getAllForNode(int id, boolean includePath)
 	{
 		Map<String, List<BuntataMedia>> result = new HashMap<>();
 
@@ -35,12 +56,12 @@ public class MediaDAO
 
 		// Get the images first
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getByIdStringStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", node.getId(), BuntataMediaType.TYPE_IMAGE);
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", BuntataMediaType.TYPE_IMAGE, id);
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
 			{
-				result.get(BuntataMediaType.TYPE_IMAGE).add(Parser.Inst.get().parse(rs));
+				result.get(BuntataMediaType.TYPE_IMAGE).add(Parser.Inst.get().parse(rs, includePath));
 			}
 		}
 		catch (SQLException e)
@@ -50,12 +71,12 @@ public class MediaDAO
 
 		// Then the videos
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getByIdStringStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", node.getId(), BuntataMediaType.TYPE_VIDEO);
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", BuntataMediaType.TYPE_VIDEO, id);
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
 			{
-				result.get(BuntataMediaType.TYPE_VIDEO).add(Parser.Inst.get().parse(rs));
+				result.get(BuntataMediaType.TYPE_VIDEO).add(Parser.Inst.get().parse(rs, includePath));
 			}
 		}
 		catch (SQLException e)
@@ -139,8 +160,18 @@ public class MediaDAO
 			}
 		}
 
+//		public BuntataMedia parse(ResultSet rs, boolean includePath) throws SQLException
+//		{
+//			BuntataMedia result = parse(rs);
+//
+//			if(!includePath)
+//				result.setInternalLink(null);
+//
+//			return result;
+//		}
+
 		@Override
-		public BuntataMedia parse(ResultSet rs) throws SQLException
+		public BuntataMedia parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataMedia(rs.getInt(BuntataMedia.FIELD_ID), rs.getTimestamp(BuntataMedia.FIELD_CREATED_ON), rs.getTimestamp(BuntataMedia.FIELD_UPDATED_ON))
 					.setMediaTypeId(rs.getInt(BuntataMedia.FIELD_MEDIATYPE_ID))

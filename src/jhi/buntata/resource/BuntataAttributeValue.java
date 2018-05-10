@@ -31,9 +31,10 @@ public class BuntataAttributeValue extends DatabaseObject
 	public static final String FIELD_ATTRIBUTE_ID = "attribute_id";
 	public static final String FIELD_VALUE        = "value";
 
-	private Integer nodeId;
-	private Integer attributeId;
-	private String  value;
+	private Integer          nodeId;
+	private Integer          attributeId;
+	private String           value;
+	private BuntataAttribute attribute;
 
 	public BuntataAttributeValue()
 	{
@@ -42,14 +43,6 @@ public class BuntataAttributeValue extends DatabaseObject
 	public BuntataAttributeValue(int id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
-	}
-
-	public BuntataAttributeValue(int id, Date createdOn, Date updatedOn, Integer nodeId, Integer attributeId, String value)
-	{
-		super(id, createdOn, updatedOn);
-		this.nodeId = nodeId;
-		this.attributeId = attributeId;
-		this.value = value;
 	}
 
 	public Integer getNodeId()
@@ -85,6 +78,17 @@ public class BuntataAttributeValue extends DatabaseObject
 		return this;
 	}
 
+	public BuntataAttribute getAttribute()
+	{
+		return attribute;
+	}
+
+	public BuntataAttributeValue setAttribute(BuntataAttribute attribute)
+	{
+		this.attribute = attribute;
+		return this;
+	}
+
 	@Override
 	public String toString()
 	{
@@ -92,6 +96,7 @@ public class BuntataAttributeValue extends DatabaseObject
 				"nodeId=" + nodeId +
 				", attributeId=" + attributeId +
 				", value='" + value + '\'' +
+				", attribute=" + attribute +
 				"} " + super.toString();
 	}
 }

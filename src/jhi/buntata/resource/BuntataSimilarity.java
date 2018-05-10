@@ -42,13 +42,6 @@ public class BuntataSimilarity extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataSimilarity(int id, Date createdOn, Date updatedOn, Integer nodeAId, Integer nodeBId)
-	{
-		super(id, createdOn, updatedOn);
-		this.nodeAId = nodeAId;
-		this.nodeBId = nodeBId;
-	}
-
 	public Integer getNodeAId()
 	{
 		return nodeAId;

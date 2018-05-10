@@ -94,7 +94,7 @@ public class NodeMediaDAO
 		}
 
 		@Override
-		public BuntataNodeMedia parse(ResultSet rs) throws SQLException
+		public BuntataNodeMedia parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataNodeMedia(rs.getInt(BuntataNodeMedia.FIELD_ID), rs.getTimestamp(BuntataNodeMedia.FIELD_CREATED_ON), rs.getTimestamp(BuntataNodeMedia.FIELD_UPDATED_ON))
 					.setNodeId(rs.getInt(BuntataNodeMedia.FIELD_NODE_ID))

@@ -60,6 +60,13 @@ public class Buntata extends Application
 		attachToRouter(router, "/datasource/{id}", Datasource.class);
 		attachToRouter(router, "/datasource/{id}/icon", DatasourceIcon.class);
 		attachToRouter(router, "/datasource/{id}/download", DatasourceDownload.class);
+		attachToRouter(router, "/datasource/{id}/nodes", DatasourceNodeList.class);
+
+		attachToRouter(router, "/media/{id}", Media.class);
+
+		attachToRouter(router, "/node", Node.class);
+		attachToRouter(router, "/node/{id}", Node.class);
+		attachToRouter(router, "/node/{id}/media", NodeMedia.class);
 
 		return corsFilter;
 	}

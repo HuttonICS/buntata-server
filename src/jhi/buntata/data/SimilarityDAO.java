@@ -94,7 +94,7 @@ public class SimilarityDAO
 		}
 
 		@Override
-		public BuntataSimilarity parse(ResultSet rs) throws SQLException
+		public BuntataSimilarity parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataSimilarity(rs.getInt(BuntataSimilarity.FIELD_ID), rs.getTimestamp(BuntataSimilarity.FIELD_CREATED_ON), rs.getTimestamp(BuntataSimilarity.FIELD_UPDATED_ON))
 					.setNodeAId(rs.getInt(BuntataSimilarity.FIELD_NODE_A_ID))

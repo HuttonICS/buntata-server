@@ -94,7 +94,7 @@ public class RelationshipDAO
 		}
 
 		@Override
-		public BuntataRelationship parse(ResultSet rs) throws SQLException
+		public BuntataRelationship parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataRelationship(rs.getInt(BuntataRelationship.FIELD_ID), rs.getTimestamp(BuntataRelationship.FIELD_CREATED_ON), rs.getTimestamp(BuntataRelationship.FIELD_UPDATED_ON))
 					.setParent(rs.getInt(BuntataRelationship.FIELD_PARENT))

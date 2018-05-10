@@ -42,13 +42,6 @@ public class BuntataNodeMedia extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataNodeMedia(int id, Date createdOn, Date updatedOn, Integer nodeId, Integer mediaId)
-	{
-		super(id, createdOn, updatedOn);
-		this.nodeId = nodeId;
-		this.mediaId = mediaId;
-	}
-
 	public Integer getNodeId()
 	{
 		return nodeId;

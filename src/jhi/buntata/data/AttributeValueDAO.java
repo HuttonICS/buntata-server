@@ -17,6 +17,7 @@
 package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
 
@@ -25,13 +26,35 @@ import jhi.buntata.resource.*;
  */
 public class AttributeValueDAO
 {
+	public List<BuntataAttributeValue> getAllForNode(int id)
+	{
+		List<BuntataAttributeValue> result = new ArrayList<>();
+
+		// Get the images first
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM attributevalues WHERE node_id = ?", id);
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result.add(Parser.Inst.get().parse(rs, true));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
 	public static class Writer implements DatabaseObjectWriter<BuntataAttributeValue>
 	{
 		public static final class Inst
 		{
 			/**
-			 * {@link InstanceHolder} is loaded on the first execution of {@link #get()} or the first access to {@link InstanceHolder#INSTANCE},
-			 * not before.
+			 * {@link InstanceHolder} is loaded on the first execution of {@link #get()} or the first access to {@link InstanceHolder#INSTANCE}, not
+			 * before.
 			 * <p/>
 			 * This solution (<a href= "http://en.wikipedia.org/wiki/Initialization_on_demand_holder_idiom" >Initialization-on-demand holder
 			 * idiom</a>) is thread-safe without requiring special language constructs (i.e. <code>volatile</code> or <code>synchronized</code>).
@@ -94,13 +117,20 @@ public class AttributeValueDAO
 			}
 		}
 
+		private AttributeDAO dao = new AttributeDAO();
+
 		@Override
-		public BuntataAttributeValue parse(ResultSet rs) throws SQLException
+		public BuntataAttributeValue parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
-			return new BuntataAttributeValue(rs.getInt(BuntataAttributeValue.FIELD_ID), rs.getTimestamp(BuntataAttributeValue.FIELD_CREATED_ON), rs.getTimestamp(BuntataAttributeValue.FIELD_UPDATED_ON))
+			BuntataAttributeValue value = new BuntataAttributeValue(rs.getInt(BuntataAttributeValue.FIELD_ID), rs.getTimestamp(BuntataAttributeValue.FIELD_CREATED_ON), rs.getTimestamp(BuntataAttributeValue.FIELD_UPDATED_ON))
 					.setNodeId(rs.getInt(BuntataAttributeValue.FIELD_NODE_ID))
 					.setAttributeId(rs.getInt(BuntataAttributeValue.FIELD_ATTRIBUTE_ID))
 					.setValue(rs.getString(BuntataAttributeValue.FIELD_VALUE));
+
+			if (includeForeign)
+				value.setAttribute(dao.get(rs.getInt(BuntataAttributeValue.FIELD_ATTRIBUTE_ID)));
+
+			return value;
 		}
 	}
 }

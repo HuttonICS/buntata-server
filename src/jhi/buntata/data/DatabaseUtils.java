@@ -23,32 +23,16 @@ import java.sql.*;
  */
 class DatabaseUtils
 {
-	static PreparedStatement getByIdStatement(Connection con, String query, int id) throws SQLException
+	static PreparedStatement getStatement(Connection con, String query, Object... bits) throws SQLException
 	{
 		PreparedStatement stmt = con.prepareStatement(query);
-		stmt.setInt(1, id);
 
-		return stmt;
-	}
-
-	static PreparedStatement getByIdStringStatement(Connection con, String query, int id, String... values) throws SQLException
-	{
-		PreparedStatement stmt = con.prepareStatement(query);
-		int i=1;
-		for(String s : values)
-			stmt.setString(i++, s);
-		stmt.setInt(i++, id);
-
-		return stmt;
-	}
-
-	static PreparedStatement updateByIdLongStatement(Connection con, String query, int id, long... values) throws SQLException
-	{
-		PreparedStatement stmt = con.prepareStatement(query);
-		int i=1;
-		for(long l : values)
-			stmt.setLong(i++, l);
-		stmt.setInt(i++, id);
+		int i = 1;
+		if (bits != null)
+		{
+			for (Object bit : bits)
+				stmt.setObject(i++, bit);
+		}
 
 		return stmt;
 	}

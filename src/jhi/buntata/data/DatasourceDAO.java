@@ -18,6 +18,7 @@ package jhi.buntata.data;
 
 import java.sql.*;
 import java.util.*;
+import java.util.logging.*;
 
 import jhi.buntata.resource.*;
 
@@ -36,7 +37,7 @@ public class DatasourceDAO
 		{
 			while (rs.next())
 			{
-				result.add(Parser.Inst.get().parse(rs));
+				result.add(Parser.Inst.get().parse(rs, true));
 			}
 		}
 		catch (SQLException e)
@@ -52,12 +53,12 @@ public class DatasourceDAO
 		BuntataDatasource result = null;
 
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getByIdStatement(con, "SELECT * FROM datasources WHERE visibility = 1 AND id = ?", id);
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM datasources WHERE visibility = 1 AND id = ?", id);
 			 ResultSet rs = stmt.executeQuery())
 		{
 			while (rs.next())
 			{
-				result = Parser.Inst.get().parse(rs);
+				result = Parser.Inst.get().parse(rs, true);
 			}
 		}
 		catch (SQLException e)
@@ -71,8 +72,9 @@ public class DatasourceDAO
 	public void updateSize(BuntataDatasource datasource)
 	{
 		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.updateByIdLongStatement(con, "UPDATE datasources SET size_total = ?, size_no_video = ? WHERE id = ?", datasource.getId(), datasource.getSizeTotal(), datasource.getSizeNoVideo()))
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "UPDATE datasources SET size_total = ?, size_no_video = ? WHERE id = ?", datasource.getSizeTotal(), datasource.getSizeNoVideo(), datasource.getId()))
 		{
+			Logger.getLogger("").log(Level.INFO, stmt.toString());
 			stmt.executeUpdate();
 		}
 		catch (SQLException e)
@@ -80,7 +82,6 @@ public class DatasourceDAO
 			e.printStackTrace();
 		}
 	}
-
 
 	public static class Parser implements DatabaseObjectParser<BuntataDatasource>
 	{
@@ -107,7 +108,7 @@ public class DatasourceDAO
 		}
 
 		@Override
-		public BuntataDatasource parse(ResultSet rs) throws SQLException
+		public BuntataDatasource parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataDatasource(rs.getInt(BuntataDatasource.FIELD_ID), rs.getTimestamp(BuntataDatasource.FIELD_CREATED_ON), rs.getTimestamp(BuntataDatasource.FIELD_UPDATED_ON))
 					.setName(rs.getString(BuntataDatasource.FIELD_NAME))

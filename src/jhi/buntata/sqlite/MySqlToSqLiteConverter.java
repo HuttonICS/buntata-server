@@ -147,7 +147,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs);
+				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs, false);
 				RelationshipDAO.Writer.Inst.get().write(relationship, targetStmt);
 			}
 
@@ -182,7 +182,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataSimilarity similarity = SimilarityDAO.Parser.Inst.get().parse(rs);
+				BuntataSimilarity similarity = SimilarityDAO.Parser.Inst.get().parse(rs, false);
 				SimilarityDAO.Writer.Inst.get().write(similarity, targetStmt);
 			}
 
@@ -218,7 +218,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs);
+				BuntataNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs, false);
 				NodeMediaDAO.Writer.Inst.get().write(media, targetStmt);
 			}
 
@@ -259,7 +259,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataMedia media = MediaDAO.Parser.Inst.get().parse(rs);
+				BuntataMedia media = MediaDAO.Parser.Inst.get().parse(rs, false);
 
 				File source = new File(media.getInternalLink());
 
@@ -270,7 +270,7 @@ public class MySqlToSqLiteConverter
 				ResultSet rsTemp = selectMediaType.executeQuery();
 				if (rsTemp.next())
 				{
-					BuntataMediaType type = MediaTypeDAO.Parser.Inst.get().parse(rsTemp);
+					BuntataMediaType type = MediaTypeDAO.Parser.Inst.get().parse(rsTemp, false);
 					isVideo = BuntataMediaType.TYPE_VIDEO.equals(type.getName());
 				}
 				rsTemp.close();
@@ -333,7 +333,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs);
+				BuntataMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs, false);
 				MediaTypeDAO.Writer.Inst.get().write(mediaType, targetStmt);
 
 				ids.add(mediaType.getId());
@@ -373,7 +373,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs);
+				BuntataAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs, false);
 				AttributeValueDAO.Writer.Inst.get().write(value, targetStmt);
 			}
 
@@ -409,7 +409,7 @@ public class MySqlToSqLiteConverter
 
 			while (rs.next())
 			{
-				BuntataAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs);
+				BuntataAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs, false);
 				AttributeDAO.Writer.Inst.get().write(attribute, targetStmt);
 
 				ids.add(attribute.getId());
@@ -441,7 +441,7 @@ public class MySqlToSqLiteConverter
 		{
 			while (rs.next())
 			{
-				BuntataNode node = NodeDAO.Parser.Inst.get().parse(rs);
+				BuntataNode node = NodeDAO.Parser.Inst.get().parse(rs, false);
 				NodeDAO.Writer.Inst.get().write(node, targetStmt);
 
 				ids.add(node.getId());
@@ -468,7 +468,7 @@ public class MySqlToSqLiteConverter
 		{
 			if (rs.next())
 			{
-				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs);
+				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs, false);
 
 				File icon = null;
 

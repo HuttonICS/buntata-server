@@ -28,5 +28,5 @@ import jhi.buntata.resource.*;
 
 interface DatabaseObjectParser<T extends DatabaseObject>
 {
-	T parse(ResultSet rs) throws SQLException;
+	T parse(ResultSet rs, boolean includeForeign) throws SQLException;
 }

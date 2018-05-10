@@ -25,6 +25,27 @@ import jhi.buntata.resource.*;
  */
 public class AttributeDAO
 {
+	public BuntataAttribute get(int id)
+	{
+		BuntataAttribute result = null;
+
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM attributes WHERE id = ?", id);
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result = Parser.Inst.get().parse(rs, true);
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
 	public static class Writer implements DatabaseObjectWriter<BuntataAttribute>
 	{
 		public static final class Inst
@@ -93,7 +114,7 @@ public class AttributeDAO
 		}
 
 		@Override
-		public BuntataAttribute parse(ResultSet rs) throws SQLException
+		public BuntataAttribute parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataAttribute(rs.getInt(BuntataAttribute.FIELD_ID), rs.getTimestamp(BuntataAttribute.FIELD_CREATED_ON), rs.getTimestamp(BuntataAttribute.FIELD_UPDATED_ON))
 					.setName(rs.getString(BuntataAttribute.FIELD_NAME));

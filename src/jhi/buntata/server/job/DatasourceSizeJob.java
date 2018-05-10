@@ -61,12 +61,12 @@ public class DatasourceSizeJob implements Runnable
 			long sizeNoVideo = 0;
 
 			// Get all the nodes
-			List<BuntataNode> nodes = nodeDAO.getAllForDatasource(datasource);
+			List<BuntataNode> nodes = nodeDAO.getAllForDatasource(datasource.getId());
 
 			for (BuntataNode node : nodes)
 			{
 				// Get all the media
-				Map<String, List<BuntataMedia>> media = mediaDAO.getAllForNode(node);
+				Map<String, List<BuntataMedia>> media = mediaDAO.getAllForNode(node.getId(), true);
 
 				long imageSize = media.get(BuntataMediaType.TYPE_IMAGE)
 									  .parallelStream()

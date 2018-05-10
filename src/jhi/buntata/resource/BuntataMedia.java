@@ -52,18 +52,6 @@ public class BuntataMedia extends DatabaseObject
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataMedia(int id, Date createdOn, Date updatedOn, Integer mediaTypeId, String name, String description, String internalLink, String externalLink, String externalLinkDescription, String copyright)
-	{
-		super(id, createdOn, updatedOn);
-		this.mediaTypeId = mediaTypeId;
-		this.name = name;
-		this.description = description;
-		this.internalLink = internalLink;
-		this.externalLink = externalLink;
-		this.externalLinkDescription = externalLinkDescription;
-		this.copyright = copyright;
-	}
-
 	public Integer getMediaTypeId()
 	{
 		return mediaTypeId;

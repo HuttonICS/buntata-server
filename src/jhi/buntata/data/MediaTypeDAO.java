@@ -93,7 +93,7 @@ public class MediaTypeDAO
 		}
 
 		@Override
-		public BuntataMediaType parse(ResultSet rs) throws SQLException
+		public BuntataMediaType parse(ResultSet rs, boolean includeForeign) throws SQLException
 		{
 			return new BuntataMediaType(rs.getInt(BuntataMediaType.FIELD_ID), rs.getTimestamp(BuntataMediaType.FIELD_CREATED_ON), rs.getTimestamp(BuntataMediaType.FIELD_UPDATED_ON))
 					.setName(rs.getString(BuntataMediaType.FIELD_NAME));
