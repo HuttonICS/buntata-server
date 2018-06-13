@@ -90,15 +90,17 @@ public class DatasourceDownload extends ServerResource
 					MediaType mt = new MediaType(mimeTypeStr);
 					representation = new FileRepresentation(file, mt);
 
+					// Give it a name and set the size
 					Disposition disp = new Disposition(Disposition.TYPE_ATTACHMENT);
 					disp.setFilename("datasource-" + id + ".zip");
 					disp.setSize(file.length());
 					representation.setDisposition(disp);
-//					representation.setAutoDeleting(true);
 				}
 			}
 			else
+			{
 				throw new ResourceException(404);
+			}
 		}
 
 		return representation;

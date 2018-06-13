@@ -17,6 +17,8 @@
 package jhi.buntata.server;
 
 import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
 /**
  * A bunch of utility methods.
@@ -31,23 +33,11 @@ public class Utils
 	 * @param dir The directory to delete
 	 */
 	public static void deleteDirectory(File dir)
+		throws IOException
 	{
-		if (dir != null && dir.isDirectory() && dir.exists())
-		{
-			File[] files = dir.listFiles();
-
-			if (files != null)
-			{
-				for (File file : files)
-				{
-					if (file.isFile() && file.exists())
-						file.delete();
-					else if (file.isDirectory() && file.exists())
-						deleteDirectory(file);
-				}
-			}
-
-			dir.delete();
-		}
+		Files.walk(dir.toPath())
+			 .map(Path::toFile)
+			 .sorted(Comparator.reverseOrder())
+			 .forEach(File::delete);
 	}
 }

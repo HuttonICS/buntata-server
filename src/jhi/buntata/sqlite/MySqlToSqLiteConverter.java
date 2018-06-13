@@ -17,7 +17,6 @@
 package jhi.buntata.sqlite;
 
 import java.io.*;
-import java.net.*;
 import java.nio.file.*;
 import java.sql.*;
 import java.util.*;
@@ -44,7 +43,8 @@ public class MySqlToSqLiteConverter
 	private final String username;
 	private final String password;
 
-	public static void main(String[] args) throws IOException, URISyntaxException, SQLException
+	public static void main(String[] args)
+		throws IOException, SQLException
 	{
 		int i = 0;
 

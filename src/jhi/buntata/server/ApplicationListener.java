@@ -37,7 +37,9 @@ public class ApplicationListener implements ServletContextListener
 	{
 		// Start the scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
+		// Run the size calculation job every 15 minutes
 		scheduler.scheduleAtFixedRate(new DatasourceSizeJob(), 0, 15, TimeUnit.MINUTES);
+		// Run the data export job every 15 minutes
 		scheduler.scheduleAtFixedRate(new DatasourceExportJob(sce.getServletContext()), 0, 15, TimeUnit.MINUTES);
 	}
 

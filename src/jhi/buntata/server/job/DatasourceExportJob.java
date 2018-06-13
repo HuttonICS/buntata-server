@@ -62,6 +62,13 @@ public class DatasourceExportJob implements Runnable
 					 .forEach(ds -> makeSureExists(servlet, ds));
 	}
 
+	/**
+	 * Makes sure the data source is exported and zipped up.
+	 *
+	 * @param servlet    The {@link ServletContext} to get access to paths and resources
+	 * @param datasource The {@link BuntataDatasource} that should be exported
+	 * @return Two {@link File}s. The first is the one containing videos, the second the one without.
+	 */
 	public static File[] makeSureExists(ServletContext servlet, BuntataDatasource datasource)
 	{
 		Date date = datasource.getUpdatedOn();
@@ -92,6 +99,14 @@ public class DatasourceExportJob implements Runnable
 		return new File[]{targetFileTrue, targetFileFalse};
 	}
 
+	/**
+	 * Exports the given {@link BuntataDatasource} to the target file.
+	 *
+	 * @param servlet       {@link ServletContext} used to access local resources and files
+	 * @param datasource    The {@link BuntataDatasource} that should be exported
+	 * @param target        The target file
+	 * @param includeVideos Should videos be included?
+	 */
 	private static void exportFile(ServletContext servlet, BuntataDatasource datasource, File target, boolean includeVideos)
 	{
 		try
@@ -120,7 +135,7 @@ public class DatasourceExportJob implements Runnable
 
 			// Define the external process
 			ProcessBuilder processBuilder = new ProcessBuilder("java", "-cp", jdbcJar.getAbsolutePath() + File.pathSeparator + jdbcClient.getAbsolutePath() + File.pathSeparator + libFolder.getAbsolutePath() + "/*", MySqlToSqLiteConverter.class.getCanonicalName(),
-					Integer.toString(id), Boolean.toString(includeVideos), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
+				Integer.toString(id), Boolean.toString(includeVideos), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
 
 			// Redirect output
 			processBuilder = processBuilder.inheritIO();
@@ -183,16 +198,21 @@ public class DatasourceExportJob implements Runnable
 		}
 	}
 
+	/**
+	 * Recursively adds all files to the given {@link List}.
+	 *
+	 * @param result The {@link List} to add the files to
+	 * @param parent The root file
+	 */
 	private static void generateFileList(List<File> result, File parent)
 	{
-		// add file only
+		// Add files only
 		if (parent.isFile())
 		{
 			result.add(parent);
 		}
-
 		// Recursively add files
-		if (parent.isDirectory())
+		else if (parent.isDirectory())
 		{
 			File[] children = parent.listFiles();
 			if (children != null)
@@ -205,6 +225,14 @@ public class DatasourceExportJob implements Runnable
 		}
 	}
 
+	/**
+	 * Returns all old exported files that have been generated for the given {@link BuntataDatasource} that aren't the given two files
+	 *
+	 * @param datasource The {@link BuntataDatasource} in question
+	 * @param t          The exported file including videos to ignore
+	 * @param f          The exported file excluding videos to ignore
+	 * @return An array of files that can be deleted
+	 */
 	private static File[] getOldFiles(BuntataDatasource datasource, File t, File f)
 	{
 		return TARGET_FOLDER.listFiles(file -> !file.equals(t) && !file.equals(f) && file.getName().startsWith(datasource.getId() + "-"));
