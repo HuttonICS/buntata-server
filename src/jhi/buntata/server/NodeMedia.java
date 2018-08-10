@@ -58,6 +58,10 @@ public class NodeMedia extends ServerResource
 		if (node != null)
 			result = mediaDAO.getAllForNode(node.getId(), false);
 
+		// Restrict paths to just the filename
+		for (Map.Entry<String, List<BuntataMedia>> e : result.entrySet())
+			e.getValue().forEach(BuntataMedia::restrict);
+
 		return result;
 	}
 }

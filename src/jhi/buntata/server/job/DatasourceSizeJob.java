@@ -37,13 +37,13 @@ public class DatasourceSizeJob implements Runnable
 
 	private Predicate<File> filter = f ->
 	{
+		// Has to exist and be a file
 		boolean result = f.exists() && f.isFile();
 
-		if (alreadyCounted.contains(f.getAbsolutePath()))
-			result = false;
-		else
-			alreadyCounted.add(f.getAbsolutePath());
+		// Add it if it didn't already exist
+		result &= alreadyCounted.add(f.getAbsolutePath());
 
+		// Result is only true if the file exists, is a file (not a folder) and hasn't already been counted
 		return result;
 	};
 
@@ -69,7 +69,7 @@ public class DatasourceSizeJob implements Runnable
 				Map<String, List<BuntataMedia>> media = mediaDAO.getAllForNode(node.getId(), true);
 
 				long imageSize = media.get(BuntataMediaType.TYPE_IMAGE)
-									  .parallelStream()
+									  .stream()
 									  .map(m -> new File(m.getInternalLink()))
 									  .filter(filter)
 									  .map(File::length)
@@ -77,7 +77,7 @@ public class DatasourceSizeJob implements Runnable
 									  .sum();
 
 				long videoSize = media.get(BuntataMediaType.TYPE_VIDEO)
-									  .parallelStream()
+									  .stream()
 									  .map(m -> new File(m.getInternalLink()))
 									  .filter(filter)
 									  .map(File::length)

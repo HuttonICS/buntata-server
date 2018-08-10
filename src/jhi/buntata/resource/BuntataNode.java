@@ -117,12 +117,26 @@ public class BuntataNode extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataNode{" +
-				"datasourceId=" + datasourceId +
-				", name='" + name + '\'' +
-				", description='" + description + '\'' +
-				", media=" + media +
-				", attributeValues=" + attributeValues +
-				", similarNodes=" + similarNodes +
-				"} " + super.toString();
+			"datasourceId=" + datasourceId +
+			", name='" + name + '\'' +
+			", description='" + description + '\'' +
+			", media=" + media +
+			", attributeValues=" + attributeValues +
+			", similarNodes=" + similarNodes +
+			"} " + super.toString();
+	}
+
+	public void restrict()
+	{
+		if (media != null)
+		{
+			for (Map.Entry<String, List<BuntataMedia>> pair : media.entrySet())
+			{
+				for (BuntataMedia m : pair.getValue())
+				{
+					m.restrict();
+				}
+			}
+		}
 	}
 }

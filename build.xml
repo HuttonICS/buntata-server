@@ -102,6 +102,7 @@
 				<filter token="database.password" value="${database.password}"/>
 				<filter token="database.url" value="${database.url}"/>
 				<filter token="api.version" value="${api.version}"/>
+				<filter token="ga.tracking.id" value="${ga.tracking.id}"/>
 			</filterset>
 		</copy>
 

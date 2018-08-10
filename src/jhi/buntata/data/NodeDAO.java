@@ -110,6 +110,27 @@ public class NodeDAO
 		return result;
 	}
 
+	public List<BuntataNode> getAllForDatasourceLeaf(int id)
+	{
+		List<BuntataNode> result = new ArrayList<>();
+
+		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
+			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ? AND NOT EXISTS (SELECT 1 FROM relationships WHERE relationships.parent = nodes.id)", id);
+			 ResultSet rs = stmt.executeQuery())
+		{
+			while (rs.next())
+			{
+				result.add(Parser.Inst.get().parse(rs, true));
+			}
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
 	public List<BuntataNode> getSimilarTo(int id)
 	{
 		List<BuntataNode> result = new ArrayList<>();

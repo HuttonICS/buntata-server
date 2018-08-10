@@ -78,6 +78,9 @@ public class Node extends ServerResource
 			return dao.getAll();
 		}
 
+		// Restrict paths to just the filename
+		result.forEach(BuntataNode::restrict);
+
 		return result;
 	}
 }

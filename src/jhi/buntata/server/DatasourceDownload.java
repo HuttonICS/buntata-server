@@ -16,6 +16,8 @@
 
 package jhi.buntata.server;
 
+import com.brsanthu.googleanalytics.*;
+
 import org.restlet.data.*;
 import org.restlet.representation.*;
 import org.restlet.resource.*;
@@ -39,6 +41,20 @@ public class DatasourceDownload extends ServerResource
 	private int           id            = -1;
 	private boolean       includeVideos = true;
 	private DatasourceDAO dao           = new DatasourceDAO();
+
+	private ServletContext  servlet = (ServletContext) getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
+	private GoogleAnalytics ga;
+
+	{
+		String id = servlet.getInitParameter("database");
+
+		if (id != null)
+		{
+			ga = GoogleAnalytics.builder()
+								.withTrackingId(id)
+								.build();
+		}
+	}
 
 	@Override
 	public void doInit()
@@ -84,6 +100,15 @@ public class DatasourceDownload extends ServerResource
 
 				if (file != null)
 				{
+					if (ga != null)
+					{
+						ga.event()
+						  .eventCategory("dataset")
+						  .eventAction("download")
+						  .eventLabel(Integer.toString(id))
+						  .sendAsync();
+					}
+
 					// Prepare the result
 					MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
 					String mimeTypeStr = mimeTypesMap.getContentType(file);

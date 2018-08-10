@@ -18,6 +18,7 @@ package jhi.buntata.server;
 
 import org.restlet.resource.*;
 
+import java.io.*;
 import java.util.*;
 
 import jhi.buntata.data.*;
@@ -52,13 +53,21 @@ public class Datasource extends ServerResource
 	{
 		List<BuntataDatasource> result = new ArrayList<>();
 		if (id == -1)
+		{
 			result = dao.getAll(false);
+		}
 		else
 		{
 			BuntataDatasource ds = dao.get(id);
 			if (ds != null)
 				result.add(ds);
 		}
+
+		result.forEach(ds -> {
+			File icon = new File(ds.getIcon());
+
+			ds.setIcon(icon.getName());
+		});
 
 		return result;
 	}

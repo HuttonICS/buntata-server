@@ -18,6 +18,7 @@ package jhi.buntata.resource;
 
 import com.fasterxml.jackson.annotation.*;
 
+import java.io.*;
 import java.util.*;
 
 /**
@@ -133,13 +134,23 @@ public class BuntataMedia extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataMedia{" +
-				"mediaTypeId=" + mediaTypeId +
-				", name='" + name + '\'' +
-				", description='" + description + '\'' +
-				", internalLink='" + internalLink + '\'' +
-				", externalLink='" + externalLink + '\'' +
-				", externalLinkDescription='" + externalLinkDescription + '\'' +
-				", copyright='" + copyright + '\'' +
-				"} " + super.toString();
+			"mediaTypeId=" + mediaTypeId +
+			", name='" + name + '\'' +
+			", description='" + description + '\'' +
+			", internalLink='" + internalLink + '\'' +
+			", externalLink='" + externalLink + '\'' +
+			", externalLinkDescription='" + externalLinkDescription + '\'' +
+			", copyright='" + copyright + '\'' +
+			"} " + super.toString();
+	}
+
+	public void restrict()
+	{
+		if (internalLink != null)
+		{
+			File f = new File(internalLink);
+
+			internalLink = f.getName();
+		}
 	}
 }

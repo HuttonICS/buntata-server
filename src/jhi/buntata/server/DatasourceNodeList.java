@@ -25,12 +25,12 @@ import jhi.buntata.resource.*;
 
 public class DatasourceNodeList extends ServerResource
 {
-	public static final String PARAM_ROOT = "root";
+	public static final String PARAM_TYPE = "type";
 
 	private final NodeDAO dao = new NodeDAO();
 
-	private int     id       = -1;
-	private boolean onlyRoot = false;
+	private int      id   = -1;
+	private NodeType type = NodeType.ALL;
 
 	public DatasourceNodeList()
 	{
@@ -50,7 +50,7 @@ public class DatasourceNodeList extends ServerResource
 
 		try
 		{
-			this.onlyRoot = Boolean.parseBoolean(getQueryValue(PARAM_ROOT));
+			type = NodeType.getForName(getQueryValue(PARAM_TYPE));
 		}
 		catch (NullPointerException e)
 		{
@@ -60,9 +60,38 @@ public class DatasourceNodeList extends ServerResource
 	@Get("json")
 	public List<BuntataNode> getNodeList()
 	{
-		if (onlyRoot)
-			return dao.getAllForDatasourceRoot(id);
-		else
-			return dao.getAllForDatasource(id);
+		switch (type)
+		{
+			case ROOT:
+				return dao.getAllForDatasourceRoot(id);
+			case LEAF:
+				return dao.getAllForDatasourceLeaf(id);
+			case ALL:
+			default:
+				return dao.getAllForDatasource(id);
+		}
+	}
+
+	private enum NodeType
+	{
+		LEAF("leaf"),
+		ROOT("root"),
+		ALL("all)");
+
+		String name;
+
+		NodeType(String name)
+		{
+			this.name = name;
+		}
+
+		public static NodeType getForName(String name)
+		{
+			for (NodeType type : values())
+				if (Objects.equals(type.name, name))
+					return type;
+
+			return NodeType.ALL;
+		}
 	}
 }
