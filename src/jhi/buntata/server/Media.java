@@ -25,7 +25,6 @@ import org.restlet.resource.*;
 import java.io.*;
 import java.util.logging.*;
 
-import javax.activation.*;
 import javax.servlet.*;
 
 import jhi.buntata.data.*;
@@ -66,7 +65,7 @@ public class Media extends ServerResource
 		}
 	}
 
-	@Get
+	@Get()
 	public Representation getImage()
 	{
 		BuntataMedia media = dao.get(id);
@@ -78,17 +77,29 @@ public class Media extends ServerResource
 			File file = new File(media.getInternalLink());
 
 			// Check if the image exists
-			if (file.exists() && file.isFile() && isImage(file))
+			if (file.exists() && file.isFile() && media.getMediaTypeId() == 1)
 			{
 				try
 				{
+					MediaType type;
+
+					if (file.getName().toLowerCase().endsWith(".jpg"))
+						type = MediaType.IMAGE_JPEG;
+					else if (file.getName().toLowerCase().endsWith(".png"))
+						type = MediaType.IMAGE_PNG;
+					else
+						type = MediaType.IMAGE_ALL;
+
 					if (small)
 					{
 						ServletContext servlet = (ServletContext) getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
 						String version = servlet.getInitParameter("version");
 						File folder = new File(System.getProperty("java.io.tmpdir"), "buntata-thumbnails" + "-" + version);
 						folder.mkdirs();
-						File target = new File(folder, file.getName() + "-small.jpg");
+
+						String extension = type == MediaType.IMAGE_PNG ? ".png" : ".jpg";
+
+						File target = new File(folder, media.getId() + "-small" + extension);
 
 						// Delete the thumbnail if it's older than the source image
 						if (target.lastModified() < file.lastModified())
@@ -111,13 +122,13 @@ public class Media extends ServerResource
 						}
 					}
 
-					MediaType type = MediaType.IMAGE_ALL;
 					representation = new FileRepresentation(file, type);
 					representation.setSize(file.length());
 					representation.setDisposition(new Disposition(Disposition.TYPE_ATTACHMENT));
 				}
 				catch (IOException e)
 				{
+					e.printStackTrace();
 				}
 			}
 			else
@@ -131,12 +142,5 @@ public class Media extends ServerResource
 		}
 
 		return representation;
-	}
-
-	private boolean isImage(File file)
-	{
-		String mimetype = new MimetypesFileTypeMap().getContentType(file);
-		String type = mimetype.split("/")[0];
-		return type.equals("image");
 	}
 }

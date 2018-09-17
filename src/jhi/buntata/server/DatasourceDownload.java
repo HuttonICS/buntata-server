@@ -42,24 +42,27 @@ public class DatasourceDownload extends ServerResource
 	private boolean       includeVideos = true;
 	private DatasourceDAO dao           = new DatasourceDAO();
 
-	private ServletContext  servlet = (ServletContext) getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
+	private ServletContext  servlet;
 	private GoogleAnalytics ga;
-
-	{
-		String id = servlet.getInitParameter("database");
-
-		if (id != null)
-		{
-			ga = GoogleAnalytics.builder()
-								.withTrackingId(id)
-								.build();
-		}
-	}
 
 	@Override
 	public void doInit()
 	{
 		super.doInit();
+
+		if (servlet == null)
+		{
+			servlet = (ServletContext) getContext().getAttributes().get("org.restlet.ext.servlet.ServletContext");
+
+			String id = servlet.getInitParameter("gatrackingid");
+
+			if (id != null)
+			{
+				ga = GoogleAnalytics.builder()
+									.withTrackingId(id)
+									.build();
+			}
+		}
 
 		// Try to parse the id
 		try
