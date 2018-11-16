@@ -28,6 +28,7 @@ import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
 import jhi.buntata.server.*;
 import jhi.buntata.sqlite.*;
+import jhi.database.server.*;
 
 /**
  * This {@link Runnable} updates the data size information of all {@link BuntataDatasource} objects by checking their {@link BuntataMedia} objects and
@@ -111,7 +112,7 @@ public class DatasourceExportJob implements Runnable
 	{
 		try
 		{
-			final int id = datasource.getId();
+			final Long id = datasource.getId();
 
 			// Get some information from the servlet
 			File sourceFile = new File(servlet.getRealPath("/WEB-INF/database.db"));
@@ -130,12 +131,14 @@ public class DatasourceExportJob implements Runnable
 			String username = servlet.getInitParameter("username");
 			String password = servlet.getInitParameter("password");
 
+			database = database.replace(Database.DatabaseType.MYSQL.getConnectionString(), "");
+
 			if (password == null || password.equals(""))
 				password = "\"\"";
 
 			// Define the external process
 			ProcessBuilder processBuilder = new ProcessBuilder("java", "-cp", jdbcJar.getAbsolutePath() + File.pathSeparator + jdbcClient.getAbsolutePath() + File.pathSeparator + libFolder.getAbsolutePath() + "/*", MySqlToSqLiteConverter.class.getCanonicalName(),
-				Integer.toString(id), Boolean.toString(includeVideos), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
+				Long.toString(id), Boolean.toString(includeVideos), sourceFile.getAbsolutePath(), targetFile.getAbsolutePath(), database, username, password);
 
 			// Redirect output
 			processBuilder = processBuilder.inheritIO();

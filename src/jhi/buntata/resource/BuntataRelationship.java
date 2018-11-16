@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -30,42 +32,42 @@ public class BuntataRelationship extends DatabaseObject
 	public static final String FIELD_PARENT = "parent";
 	public static final String FIELD_CHILD  = "child";
 
-	private Integer parent;
-	private Integer child;
+	private Long parent;
+	private Long child;
 
 	public BuntataRelationship()
 	{
 	}
 
-	public BuntataRelationship(int id, Date createdOn, Date updatedOn)
+	public BuntataRelationship(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataRelationship(int id, Date createdOn, Date updatedOn, Integer parent, Integer child)
+	public BuntataRelationship(Long id, Date createdOn, Date updatedOn, Long parent, Long child)
 	{
 		super(id, createdOn, updatedOn);
 		this.parent = parent;
 		this.child = child;
 	}
 
-	public Integer getParent()
+	public Long getParent()
 	{
 		return parent;
 	}
 
-	public BuntataRelationship setParent(Integer parent)
+	public BuntataRelationship setParent(Long parent)
 	{
 		this.parent = parent;
 		return this;
 	}
 
-	public Integer getChild()
+	public Long getChild()
 	{
 		return child;
 	}
 
-	public BuntataRelationship setChild(Integer child)
+	public BuntataRelationship setChild(Long child)
 	{
 		this.child = child;
 		return this;

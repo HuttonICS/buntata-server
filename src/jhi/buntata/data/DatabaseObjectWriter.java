@@ -16,9 +16,11 @@
 
 package jhi.buntata.data;
 
-import java.sql.*;
+import java.util.*;
 
-import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * {@link DatabaseObjectWriter} is an interface defining how a {@link DatabaseObject} should be written.
@@ -26,7 +28,31 @@ import jhi.buntata.resource.*;
  * @author Sebastian Raubach
  */
 
-interface DatabaseObjectWriter<T extends DatabaseObject>
+public abstract class DatabaseObjectWriter<T extends DatabaseObject>
 {
-	void write(T object, PreparedStatement stmt) throws SQLException;
+	public abstract void write(T object, DatabaseStatement stmt)
+		throws DatabaseException;
+
+	public abstract void writeBatched(T object, DatabaseStatement stmt)
+		throws DatabaseException;
+
+	public abstract DatabaseStatement getStatement(Database database)
+		throws DatabaseException;
+
+	protected void setDate(int i, Date date, DatabaseStatement stmt)
+		throws DatabaseException
+	{
+		Database.DatabaseType type = Database.getDbType();
+
+		switch (type)
+		{
+			case SQLITE:
+				stmt.setLong(i, date.getTime());
+				break;
+			case MYSQL:
+			default:
+				stmt.setTimestamp(i, date);
+				break;
+		}
+	}
 }

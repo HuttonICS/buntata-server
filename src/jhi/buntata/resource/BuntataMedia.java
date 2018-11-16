@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.*;
 import java.io.*;
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -36,29 +38,29 @@ public class BuntataMedia extends DatabaseObject
 	public static final String FIELD_EXTERNAL_LINK_DESCRIPTION = "external_link_description";
 	public static final String FIELD_COPYRIGHT                 = "copyright";
 
-	private Integer mediaTypeId;
-	private String  name;
-	private String  description;
-	private String  internalLink;
-	private String  externalLink;
-	private String  externalLinkDescription;
-	private String  copyright;
+	private Long   mediaTypeId;
+	private String name;
+	private String description;
+	private String internalLink;
+	private String externalLink;
+	private String externalLinkDescription;
+	private String copyright;
 
 	public BuntataMedia()
 	{
 	}
 
-	public BuntataMedia(int id, Date createdOn, Date updatedOn)
+	public BuntataMedia(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public Integer getMediaTypeId()
+	public Long getMediaTypeId()
 	{
 		return mediaTypeId;
 	}
 
-	public BuntataMedia setMediaTypeId(Integer mediaTypeId)
+	public BuntataMedia setMediaTypeId(Long mediaTypeId)
 	{
 		this.mediaTypeId = mediaTypeId;
 		return this;

@@ -20,6 +20,10 @@ import java.sql.*;
 import java.util.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
@@ -28,152 +32,123 @@ public class NodeDAO
 {
 	public List<BuntataNode> getAll()
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = con.prepareStatement("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1");
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1")
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public BuntataNode get(int id)
+	public BuntataNode get(Long id)
 	{
-		BuntataNode result = null;
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND nodes.id = ?", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result = SimilarParser.Inst.get().parse(rs, true);
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND nodes.id = ?")
+				.setLong(id)
+				.run()
+				.getObject(SimilarParser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return null;
 	}
 
-	public List<BuntataNode> getAllForParent(int nodeParentId)
+	public List<BuntataNode> getAllForParent(Long nodeParentId)
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND EXISTS (SELECT 1 FROM relationships WHERE relationships.child = nodes.id AND relationships.parent = ?)", nodeParentId);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND EXISTS (SELECT 1 FROM relationships WHERE relationships.child = nodes.id AND relationships.parent = ?)")
+				.setLong(nodeParentId)
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public List<BuntataNode> getAllForDatasourceRoot(int id)
+	public List<BuntataNode> getAllForDatasourceRoot(Long id)
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ? AND NOT EXISTS (SELECT 1 FROM relationships WHERE relationships.child = nodes.id)", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ? AND NOT EXISTS (SELECT 1 FROM relationships WHERE relationships.child = nodes.id)")
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public List<BuntataNode> getAllForDatasourceLeaf(int id)
+	public List<BuntataNode> getAllForDatasourceLeaf(Long id)
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ? AND NOT EXISTS (SELECT 1 FROM relationships WHERE relationships.parent = nodes.id)", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ? AND NOT EXISTS (SELECT 1 FROM relationships WHERE relationships.parent = nodes.id)")
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public List<BuntataNode> getSimilarTo(int id)
+	public List<BuntataNode> getSimilarTo(Long id)
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes WHERE EXISTS (SELECT 1 FROM similarities WHERE similarities.node_b_id = nodes.id AND similarities.node_a_id = ?)", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes WHERE EXISTS (SELECT 1 FROM similarities WHERE similarities.node_b_id = nodes.id AND similarities.node_a_id = ?)")
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public List<BuntataNode> getAllForDatasource(int id)
+	public List<BuntataNode> getAllForDatasource(Long id)
 	{
-		List<BuntataNode> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ?", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes LEFT JOIN datasources ON datasources.id = nodes.datasource_id WHERE datasources.visibility = 1 AND datasource_id = ?")
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), true);
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public static class Writer implements DatabaseObjectWriter<BuntataNode>
+	public static class Writer extends DatabaseObjectWriter<BuntataNode>
 	{
 		public static final class Inst
 		{
@@ -198,27 +173,56 @@ public class NodeDAO
 		}
 
 		@Override
-		public void write(BuntataNode object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `nodes` (`id`, `datasource_id`, `name`, `description`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataNode object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
-			stmt.setInt(i++, object.getDatasourceId());
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getDatasourceId());
 			stmt.setString(i++, object.getName());
 			stmt.setString(i++, object.getDescription());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataNode object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getDatasourceId());
+			stmt.setString(i++, object.getName());
+			stmt.setString(i++, object.getDescription());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataNode>
+	public static class Parser extends DatabaseObjectParser<BuntataNode>
 	{
 		public static final class Inst
 		{
@@ -246,16 +250,17 @@ public class NodeDAO
 		private static AttributeValueDAO attributeValueDao = new AttributeValueDAO();
 
 		@Override
-		public BuntataNode parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataNode parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			BuntataNode node = new BuntataNode(rs.getInt(BuntataNode.FIELD_ID), rs.getTimestamp(BuntataNode.FIELD_CREATED_ON), rs.getTimestamp(BuntataNode.FIELD_UPDATED_ON))
-					.setDatasourceId(rs.getInt(BuntataNode.FIELD_DATASOURCE_ID))
-					.setName(rs.getString(BuntataNode.FIELD_NAME))
-					.setDescription(rs.getString(BuntataNode.FIELD_DESCRIPTION));
+			BuntataNode node = new BuntataNode(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+				.setDatasourceId(rs.getLong(BuntataNode.FIELD_DATASOURCE_ID))
+				.setName(rs.getString(BuntataNode.FIELD_NAME))
+				.setDescription(rs.getString(BuntataNode.FIELD_DESCRIPTION));
 
 			if (includeForeign)
-				node.setMedia(mediaDao.getAllForNode(rs.getInt(BuntataNode.FIELD_ID), false))
-					.setAttributeValues(attributeValueDao.getAllForNode(rs.getInt(BuntataNode.FIELD_ID)));
+				node.setMedia(mediaDao.getAllForNode(rs.getLong(BuntataNode.ID), false))
+					.setAttributeValues(attributeValueDao.getAllForNode(rs.getInt(BuntataNode.ID)));
 
 			return node;
 		}
@@ -288,12 +293,13 @@ public class NodeDAO
 		private static NodeDAO nodeDao = new NodeDAO();
 
 		@Override
-		public BuntataNode parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataNode parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
 			BuntataNode result = super.parse(rs, includeForeign);
 
 			if (result != null && includeForeign)
-				result.setSimilarNodes(nodeDao.getSimilarTo(rs.getInt(BuntataNode.FIELD_ID)));
+				result.setSimilarNodes(nodeDao.getSimilarTo(rs.getLong(BuntataNode.ID)));
 
 			return result;
 		}

@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -31,7 +33,7 @@ public class BuntataNode extends DatabaseObject
 	public static final String FIELD_NAME          = "name";
 	public static final String FIELD_DESCRIPTION   = "description";
 
-	private Integer                         datasourceId;
+	private Long                            datasourceId;
 	private String                          name;
 	private String                          description;
 	private Map<String, List<BuntataMedia>> media;
@@ -42,17 +44,17 @@ public class BuntataNode extends DatabaseObject
 	{
 	}
 
-	public BuntataNode(int id, Date createdOn, Date updatedOn)
+	public BuntataNode(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public Integer getDatasourceId()
+	public Long getDatasourceId()
 	{
 		return datasourceId;
 	}
 
-	public BuntataNode setDatasourceId(Integer datasourceId)
+	public BuntataNode setDatasourceId(Long datasourceId)
 	{
 		this.datasourceId = datasourceId;
 		return this;

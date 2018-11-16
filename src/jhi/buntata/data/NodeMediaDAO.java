@@ -19,13 +19,16 @@ package jhi.buntata.data;
 import java.sql.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
  */
 public class NodeMediaDAO
 {
-	public static class Writer implements DatabaseObjectWriter<BuntataNodeMedia>
+	public static class Writer extends DatabaseObjectWriter<BuntataNodeMedia>
 	{
 		public static final class Inst
 		{
@@ -50,26 +53,54 @@ public class NodeMediaDAO
 		}
 
 		@Override
-		public void write(BuntataNodeMedia object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `nodemedia` (`id`, `node_id`, `media_id`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataNodeMedia object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
-			stmt.setInt(i++, object.getNodeId());
-			stmt.setInt(i++, object.getMediaId());
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getNodeId());
+			stmt.setLong(i++, object.getMediaId());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataNodeMedia object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getNodeId());
+			stmt.setLong(i++, object.getMediaId());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataNodeMedia>
+	public static class Parser extends DatabaseObjectParser<BuntataNodeMedia>
 	{
 		public static final class Inst
 		{
@@ -94,11 +125,12 @@ public class NodeMediaDAO
 		}
 
 		@Override
-		public BuntataNodeMedia parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataNodeMedia parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			return new BuntataNodeMedia(rs.getInt(BuntataNodeMedia.FIELD_ID), rs.getTimestamp(BuntataNodeMedia.FIELD_CREATED_ON), rs.getTimestamp(BuntataNodeMedia.FIELD_UPDATED_ON))
-					.setNodeId(rs.getInt(BuntataNodeMedia.FIELD_NODE_ID))
-					.setMediaId(rs.getInt(BuntataNodeMedia.FIELD_MEDIA_ID));
+			return new BuntataNodeMedia(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+				.setNodeId(rs.getLong(BuntataNodeMedia.FIELD_NODE_ID))
+				.setMediaId(rs.getLong(BuntataNodeMedia.FIELD_MEDIA_ID));
 		}
 	}
 }

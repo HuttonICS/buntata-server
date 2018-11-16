@@ -20,66 +20,62 @@ import java.sql.*;
 import java.util.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
  */
 public class MediaDAO
 {
-	public BuntataMedia get(int id)
+	public BuntataMedia get(Long id)
 	{
-		BuntataMedia result = null;
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM media WHERE id = ?", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result = Parser.Inst.get().parse(rs, true);
-			}
+			return new DatabaseObjectQuery<BuntataMedia>("SELECT * FROM media WHERE id = ?")
+				.setLong(id)
+				.run()
+				.getObject(Parser.Inst.get());
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return null;
 	}
 
-	public Map<String, List<BuntataMedia>> getAllForNode(int id, boolean includePath)
+	public Map<String, List<BuntataMedia>> getAllForNode(Long id, boolean includePath)
 	{
 		Map<String, List<BuntataMedia>> result = new HashMap<>();
 
 		result.put(BuntataMediaType.TYPE_IMAGE, new ArrayList<>());
 		result.put(BuntataMediaType.TYPE_VIDEO, new ArrayList<>());
 
-		// Get the images first
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", BuntataMediaType.TYPE_IMAGE, id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.get(BuntataMediaType.TYPE_IMAGE).add(Parser.Inst.get().parse(rs, includePath));
-			}
+			result.get(BuntataMediaType.TYPE_IMAGE).addAll(new DatabaseObjectQuery<BuntataMedia>("SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)")
+				.setString(BuntataMediaType.TYPE_IMAGE)
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), includePath));
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		// Then the videos
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)", BuntataMediaType.TYPE_VIDEO, id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.get(BuntataMediaType.TYPE_VIDEO).add(Parser.Inst.get().parse(rs, includePath));
-			}
+			result.get(BuntataMediaType.TYPE_VIDEO).addAll(new DatabaseObjectQuery<BuntataMedia>("SELECT media.* FROM media LEFT JOIN mediatypes ON mediatypes.id = media.mediatype_id WHERE mediatypes.name = ? AND EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id = ?)")
+				.setString(BuntataMediaType.TYPE_VIDEO)
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get(), includePath));
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
@@ -87,7 +83,7 @@ public class MediaDAO
 		return result;
 	}
 
-	public static class Writer implements DatabaseObjectWriter<BuntataMedia>
+	public static class Writer extends DatabaseObjectWriter<BuntataMedia>
 	{
 		public static final class Inst
 		{
@@ -112,11 +108,19 @@ public class MediaDAO
 		}
 
 		@Override
-		public void write(BuntataMedia object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `media` (`id`, `mediatype_id`, `name`, `description`, `internal_link`, `external_link`, `external_link_description`, `copyright`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataMedia object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
-			stmt.setInt(i++, object.getMediaTypeId());
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getMediaTypeId());
 			stmt.setString(i++, object.getName());
 			stmt.setString(i++, object.getDescription());
 			stmt.setString(i++, object.getInternalLink());
@@ -124,19 +128,44 @@ public class MediaDAO
 			stmt.setString(i++, object.getExternalLinkDescription());
 			stmt.setString(i++, object.getCopyright());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataMedia object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getMediaTypeId());
+			stmt.setString(i++, object.getName());
+			stmt.setString(i++, object.getDescription());
+			stmt.setString(i++, object.getInternalLink());
+			stmt.setString(i++, object.getExternalLink());
+			stmt.setString(i++, object.getExternalLinkDescription());
+			stmt.setString(i++, object.getCopyright());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataMedia>
+	public static class Parser extends DatabaseObjectParser<BuntataMedia>
 	{
 		public static final class Inst
 		{
@@ -160,27 +189,18 @@ public class MediaDAO
 			}
 		}
 
-//		public BuntataMedia parse(ResultSet rs, boolean includePath) throws SQLException
-//		{
-//			BuntataMedia result = parse(rs);
-//
-//			if(!includePath)
-//				result.setInternalLink(null);
-//
-//			return result;
-//		}
-
 		@Override
-		public BuntataMedia parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataMedia parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			return new BuntataMedia(rs.getInt(BuntataMedia.FIELD_ID), rs.getTimestamp(BuntataMedia.FIELD_CREATED_ON), rs.getTimestamp(BuntataMedia.FIELD_UPDATED_ON))
-					.setMediaTypeId(rs.getInt(BuntataMedia.FIELD_MEDIATYPE_ID))
-					.setName(rs.getString(BuntataMedia.FIELD_NAME))
-					.setDescription(rs.getString(BuntataMedia.FIELD_DESCRIPTION))
-					.setInternalLink(rs.getString(BuntataMedia.FIELD_INTERNAL_LINK))
-					.setExternalLink(rs.getString(BuntataMedia.FIELD_EXTERNAL_LINK))
-					.setExternalLinkDescription(rs.getString(BuntataMedia.FIELD_EXTERNAL_LINK_DESCRIPTION))
-					.setCopyright(rs.getString(BuntataMedia.FIELD_COPYRIGHT));
+			return new BuntataMedia(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+				.setMediaTypeId(rs.getLong(BuntataMedia.FIELD_MEDIATYPE_ID))
+				.setName(rs.getString(BuntataMedia.FIELD_NAME))
+				.setDescription(rs.getString(BuntataMedia.FIELD_DESCRIPTION))
+				.setInternalLink(rs.getString(BuntataMedia.FIELD_INTERNAL_LINK))
+				.setExternalLink(rs.getString(BuntataMedia.FIELD_EXTERNAL_LINK))
+				.setExternalLinkDescription(rs.getString(BuntataMedia.FIELD_EXTERNAL_LINK_DESCRIPTION))
+				.setCopyright(rs.getString(BuntataMedia.FIELD_COPYRIGHT));
 		}
 	}
 }

@@ -22,26 +22,11 @@
     <WatchedResource>WEB-INF/web.xml</WatchedResource>
     <WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>
 
-    <!-- Uncomment this to disable session persistence across Tomcat restarts -->
-    <!--
-    <Manager pathname="" />
-    -->
-
-    <!-- Uncomment this to enable Comet connection tacking (provides events
-         on session expiration as well as webapp lifecycle) -->
-    <!--
-    <Valve className="org.apache.catalina.valves.CometConnectionManagerValve" />
-    -->
-
     <Parameter name="database" value="@database.url@" override="true" />
     <Parameter name="username" value="@database.username@" override="true" />
     <Parameter name="password" value="@database.password@" override="true" />
+<Parameter name="masterUsername" value="@master.username@" override="true" />
+<Parameter name="masterPassword" value="@master.password@" override="true" />
     <Parameter name="version"  value="@api.version@" override="true" />
 <Parameter name="gatrackingid" value="@ga.tracking.id@" override="true" />
-
-    <Resource name="@datasource@" auth="Container" factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
-        type="javax.sql.DataSource" maxTotal="30" maxIdle="10" maxWaitMillis="10000" username="@database.username@"
-        password="@database.password@" driverClassName="com.mysql.jdbc.Driver" url="@database.url@"
-        removeAbandoned="true" logAbandoned="true" timeBetweenEvictionRunsMillis = "34000" validationQuery="SELECT 1"
-        validationInterval="34" testOnBorrow="true" removeAbandonedTimeout="55" minEvictableIdleTimeMillis="30000" closeMethod="close"/>
 </Context>

@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -30,35 +32,35 @@ public class BuntataSimilarity extends DatabaseObject
 	public static final String FIELD_NODE_A_ID = "node_a_id";
 	public static final String FIELD_NODE_B_ID = "node_b_id";
 
-	private Integer nodeAId;
-	private Integer nodeBId;
+	private Long nodeAId;
+	private Long nodeBId;
 
 	public BuntataSimilarity()
 	{
 	}
 
-	public BuntataSimilarity(int id, Date createdOn, Date updatedOn)
+	public BuntataSimilarity(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public Integer getNodeAId()
+	public Long getNodeAId()
 	{
 		return nodeAId;
 	}
 
-	public BuntataSimilarity setNodeAId(Integer nodeAId)
+	public BuntataSimilarity setNodeAId(Long nodeAId)
 	{
 		this.nodeAId = nodeAId;
 		return this;
 	}
 
-	public Integer getNodeBId()
+	public Long getNodeBId()
 	{
 		return nodeBId;
 	}
 
-	public BuntataSimilarity setNodeBId(Integer nodeBId)
+	public BuntataSimilarity setNodeBId(Long nodeBId)
 	{
 		this.nodeBId = nodeBId;
 		return this;
@@ -68,8 +70,8 @@ public class BuntataSimilarity extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataSimilarity{" +
-				"nodeAId=" + nodeAId +
-				", nodeBId=" + nodeBId +
-				"} " + super.toString();
+			"nodeAId=" + nodeAId +
+			", nodeBId=" + nodeBId +
+			"} " + super.toString();
 	}
 }

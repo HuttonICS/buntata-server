@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -39,8 +41,8 @@ public class BuntataDatasource extends DatabaseObject
 	public static final String FIELD_SIZE_TOTAL        = "size_total";
 	public static final String FIELD_SIZE_NO_VIDEO     = "size_no_video";
 
-	private String name;
-	private String description;
+	private String  name;
+	private String  description;
 	private boolean visibility = true;
 	private int     versionNumber;
 	private String  dataProvider;
@@ -55,12 +57,12 @@ public class BuntataDatasource extends DatabaseObject
 	{
 	}
 
-	public BuntataDatasource(int id, Date createdOn, Date updatedOn)
+	public BuntataDatasource(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public BuntataDatasource(int id, Date createdOn, Date updatedOn, String name, String description, boolean visibility, int versionNumber, String dataProvider, String contact, boolean showKeyName, boolean showSingleChild, String icon, long sizeTotal, long sizeNoVideo)
+	public BuntataDatasource(Long id, Date createdOn, Date updatedOn, String name, String description, boolean visibility, int versionNumber, String dataProvider, String contact, boolean showKeyName, boolean showSingleChild, String icon, long sizeTotal, long sizeNoVideo)
 	{
 		super(id, createdOn, updatedOn);
 		this.name = name;
@@ -201,20 +203,20 @@ public class BuntataDatasource extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataDatasource{" +
-				"id=" + id +
-				", createdOn=" + createdOn +
-				", updatedOn=" + updatedOn +
-				", name='" + name + '\'' +
-				", description='" + description + '\'' +
-				", visibility=" + visibility +
-				", versionNumber=" + versionNumber +
-				", dataProvider='" + dataProvider + '\'' +
-				", contact='" + contact + '\'' +
-				", showKeyName=" + showKeyName +
-				", showSingleChild=" + showSingleChild +
-				", icon='" + icon + '\'' +
-				", sizeTotal=" + sizeTotal +
-				", sizeNoVideo=" + sizeNoVideo +
-				"} " + super.toString();
+			"id=" + id +
+			", createdOn=" + createdOn +
+			", updatedOn=" + updatedOn +
+			", name='" + name + '\'' +
+			", description='" + description + '\'' +
+			", visibility=" + visibility +
+			", versionNumber=" + versionNumber +
+			", dataProvider='" + dataProvider + '\'' +
+			", contact='" + contact + '\'' +
+			", showKeyName=" + showKeyName +
+			", showSingleChild=" + showSingleChild +
+			", icon='" + icon + '\'' +
+			", sizeTotal=" + sizeTotal +
+			", sizeNoVideo=" + sizeNoVideo +
+			"} " + super.toString();
 	}
 }

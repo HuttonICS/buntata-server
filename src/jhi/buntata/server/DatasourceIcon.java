@@ -33,7 +33,7 @@ import jhi.buntata.resource.*;
 public class DatasourceIcon extends ServerResource
 {
 	private final DatasourceDAO dao = new DatasourceDAO();
-	private       int           id  = -1;
+	private       Long          id  = null;
 
 	@Override
 	public void doInit()
@@ -42,7 +42,7 @@ public class DatasourceIcon extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{

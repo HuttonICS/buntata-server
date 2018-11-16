@@ -32,7 +32,7 @@ public class NodeMedia extends ServerResource
 {
 	private final NodeDAO  nodeDAO  = new NodeDAO();
 	private final MediaDAO mediaDAO = new MediaDAO();
-	private       int      id       = -1;
+	private       Long     id       = null;
 
 	@Override
 	public void doInit()
@@ -41,7 +41,7 @@ public class NodeMedia extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{

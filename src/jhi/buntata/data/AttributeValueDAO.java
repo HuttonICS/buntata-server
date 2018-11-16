@@ -20,6 +20,10 @@ import java.sql.*;
 import java.util.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
@@ -28,27 +32,22 @@ public class AttributeValueDAO
 {
 	public List<BuntataAttributeValue> getAllForNode(int id)
 	{
-		List<BuntataAttributeValue> result = new ArrayList<>();
-
-		// Get the images first
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM attributevalues WHERE node_id = ?", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataAttributeValue>("SELECT * FROM attributevalues WHERE node_id = ?")
+				.setLong(id)
+				.run()
+				.getObjects(Parser.Inst.get());
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public static class Writer implements DatabaseObjectWriter<BuntataAttributeValue>
+	public static class Writer extends DatabaseObjectWriter<BuntataAttributeValue>
 	{
 		public static final class Inst
 		{
@@ -73,27 +72,56 @@ public class AttributeValueDAO
 		}
 
 		@Override
-		public void write(BuntataAttributeValue object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `attributevalues` (`id`, `node_id`, `attribute_id`, `value`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataAttributeValue object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
-			stmt.setInt(i++, object.getNodeId());
-			stmt.setInt(i++, object.getAttributeId());
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getNodeId());
+			stmt.setLong(i++, object.getAttributeId());
 			stmt.setString(i++, object.getValue());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataAttributeValue object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getNodeId());
+			stmt.setLong(i++, object.getAttributeId());
+			stmt.setString(i++, object.getValue());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataAttributeValue>
+	public static class Parser extends DatabaseObjectParser<BuntataAttributeValue>
 	{
 		public static final class Inst
 		{
@@ -120,15 +148,16 @@ public class AttributeValueDAO
 		private AttributeDAO dao = new AttributeDAO();
 
 		@Override
-		public BuntataAttributeValue parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataAttributeValue parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			BuntataAttributeValue value = new BuntataAttributeValue(rs.getInt(BuntataAttributeValue.FIELD_ID), rs.getTimestamp(BuntataAttributeValue.FIELD_CREATED_ON), rs.getTimestamp(BuntataAttributeValue.FIELD_UPDATED_ON))
-					.setNodeId(rs.getInt(BuntataAttributeValue.FIELD_NODE_ID))
-					.setAttributeId(rs.getInt(BuntataAttributeValue.FIELD_ATTRIBUTE_ID))
-					.setValue(rs.getString(BuntataAttributeValue.FIELD_VALUE));
+			BuntataAttributeValue value = new BuntataAttributeValue(rs.getLong(BuntataDatasource.ID), rs.getTimestamp(BuntataDatasource.CREATED_ON), rs.getTimestamp(BuntataDatasource.UPDATED_ON))
+				.setNodeId(rs.getLong(BuntataAttributeValue.FIELD_NODE_ID))
+				.setAttributeId(rs.getLong(BuntataAttributeValue.FIELD_ATTRIBUTE_ID))
+				.setValue(rs.getString(BuntataAttributeValue.FIELD_VALUE));
 
 			if (includeForeign)
-				value.setAttribute(dao.get(rs.getInt(BuntataAttributeValue.FIELD_ATTRIBUTE_ID)));
+				value.setAttribute(dao.get(rs.getLong(BuntataAttributeValue.FIELD_ATTRIBUTE_ID)));
 
 			return value;
 		}

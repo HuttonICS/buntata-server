@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -38,7 +40,7 @@ public class BuntataMediaType extends DatabaseObject
 	{
 	}
 
-	public BuntataMediaType(int id, Date createdOn, Date updatedOn)
+	public BuntataMediaType(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}

@@ -18,9 +18,12 @@ package jhi.buntata.data;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
@@ -29,61 +32,70 @@ public class DatasourceDAO
 {
 	public List<BuntataDatasource> getAll(boolean includeInvisible)
 	{
-		List<BuntataDatasource> result = new ArrayList<>();
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = con.prepareStatement(includeInvisible ? "SELECT * FROM datasources" : "SELECT * FROM datasources WHERE visibility = 1");
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result.add(Parser.Inst.get().parse(rs, true));
-			}
+			return new DatabaseObjectQuery<BuntataDatasource>(includeInvisible ? "SELECT * FROM datasources" : "SELECT * FROM datasources WHERE visibility = 1")
+				.run()
+				.getObjects(Parser.Inst.get());
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return new ArrayList<>();
 	}
 
-	public BuntataDatasource get(int id)
+	public BuntataDatasource get(Long id)
 	{
-		BuntataDatasource result = null;
-
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "SELECT * FROM datasources WHERE visibility = 1 AND id = ?", id);
-			 ResultSet rs = stmt.executeQuery())
+		try
 		{
-			while (rs.next())
-			{
-				result = Parser.Inst.get().parse(rs, true);
-			}
+			return new DatabaseObjectQuery<BuntataDatasource>("SELECT * FROM datasources WHERE visibility = 1 AND id = ?")
+				.setLong(id)
+				.run()
+				.getObject(Parser.Inst.get());
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 
-		return result;
+		return null;
 	}
 
 	public void updateSize(BuntataDatasource datasource)
 	{
-		try (Connection con = Database.INSTANCE.getMySQLDataSource().getConnection();
-			 PreparedStatement stmt = DatabaseUtils.getStatement(con, "UPDATE datasources SET size_total = ?, size_no_video = ? WHERE id = ?", datasource.getSizeTotal(), datasource.getSizeNoVideo(), datasource.getId()))
+		try
 		{
-			Logger.getLogger("").log(Level.INFO, stmt.toString());
-			stmt.executeUpdate();
+			new ValueQuery("UPDATE datasources SET size_total = ?, size_no_video = ? WHERE id = ?")
+				.setLong(datasource.getSizeTotal())
+				.setLong(datasource.getSizeNoVideo())
+				.setLong(datasource.getId())
+				.execute();
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataDatasource>
+	public boolean add(BuntataDatasource datasource)
+	{
+		try
+		{
+			Database database = Database.connect();
+			Writer.Inst.get().write(datasource, Writer.Inst.get().getStatement(database));
+			database.close();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static class Parser extends DatabaseObjectParser<BuntataDatasource>
 	{
 		public static final class Inst
 		{
@@ -108,24 +120,25 @@ public class DatasourceDAO
 		}
 
 		@Override
-		public BuntataDatasource parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataDatasource parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			return new BuntataDatasource(rs.getInt(BuntataDatasource.FIELD_ID), rs.getTimestamp(BuntataDatasource.FIELD_CREATED_ON), rs.getTimestamp(BuntataDatasource.FIELD_UPDATED_ON))
-					.setName(rs.getString(BuntataDatasource.FIELD_NAME))
-					.setDescription(rs.getString(BuntataDatasource.FIELD_DESCRIPTION))
-					.setVisibility(rs.getBoolean(BuntataDatasource.FIELD_VISIBILITY))
-					.setVersionNumber(rs.getInt(BuntataDatasource.FIELD_VERSION_NUMBER))
-					.setDataProvider(rs.getString(BuntataDatasource.FIELD_DATA_PROVIDER))
-					.setContact(rs.getString(BuntataDatasource.FIELD_CONTACT))
-					.setShowKeyName(rs.getBoolean(BuntataDatasource.FIELD_SHOW_KEY_NAME))
-					.setShowSingleChild(rs.getBoolean(BuntataDatasource.FIELD_SHOW_SINGLE_CHILD))
-					.setIcon(rs.getString(BuntataDatasource.FIELD_ICON))
-					.setSizeTotal(rs.getLong(BuntataDatasource.FIELD_SIZE_TOTAL))
-					.setSizeNoVideo(rs.getLong(BuntataDatasource.FIELD_SIZE_NO_VIDEO));
+			return new BuntataDatasource(rs.getLong(BuntataDatasource.ID), rs.getTimestamp(BuntataDatasource.CREATED_ON), rs.getTimestamp(BuntataDatasource.UPDATED_ON))
+				.setName(rs.getString(BuntataDatasource.FIELD_NAME))
+				.setDescription(rs.getString(BuntataDatasource.FIELD_DESCRIPTION))
+				.setVisibility(rs.getBoolean(BuntataDatasource.FIELD_VISIBILITY))
+				.setVersionNumber(rs.getInt(BuntataDatasource.FIELD_VERSION_NUMBER))
+				.setDataProvider(rs.getString(BuntataDatasource.FIELD_DATA_PROVIDER))
+				.setContact(rs.getString(BuntataDatasource.FIELD_CONTACT))
+				.setShowKeyName(rs.getBoolean(BuntataDatasource.FIELD_SHOW_KEY_NAME))
+				.setShowSingleChild(rs.getBoolean(BuntataDatasource.FIELD_SHOW_SINGLE_CHILD))
+				.setIcon(rs.getString(BuntataDatasource.FIELD_ICON))
+				.setSizeTotal(rs.getLong(BuntataDatasource.FIELD_SIZE_TOTAL))
+				.setSizeNoVideo(rs.getLong(BuntataDatasource.FIELD_SIZE_NO_VIDEO));
 		}
 	}
 
-	public static class Writer implements DatabaseObjectWriter<BuntataDatasource>
+	public static class Writer extends DatabaseObjectWriter<BuntataDatasource>
 	{
 		public static final class Inst
 		{
@@ -150,10 +163,18 @@ public class DatasourceDAO
 		}
 
 		@Override
-		public void write(BuntataDatasource object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `show_key_name`, `show_single_child`, `icon`, `size_total`, `size_no_video`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataDatasource object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
+			stmt.setLong(i++, object.getId());
 			stmt.setString(i++, object.getName());
 			stmt.setString(i++, object.getDescription());
 			stmt.setInt(i++, object.getVersionNumber());
@@ -165,15 +186,43 @@ public class DatasourceDAO
 			stmt.setLong(i++, object.getSizeTotal());
 			stmt.setLong(i++, object.getSizeNoVideo());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataDatasource object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setString(i++, object.getName());
+			stmt.setString(i++, object.getDescription());
+			stmt.setInt(i++, object.getVersionNumber());
+			stmt.setString(i++, object.getDataProvider());
+			stmt.setString(i++, object.getContact());
+			stmt.setBoolean(i++, object.isShowKeyName());
+			stmt.setBoolean(i++, object.isShowSingleChild());
+			stmt.setString(i++, object.getIcon());
+			stmt.setLong(i++, object.getSizeTotal());
+			stmt.setLong(i++, object.getSizeNoVideo());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 }

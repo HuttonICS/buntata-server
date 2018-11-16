@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -30,35 +32,35 @@ public class BuntataNodeMedia extends DatabaseObject
 	public static final String FIELD_NODE_ID  = "node_id";
 	public static final String FIELD_MEDIA_ID = "media_id";
 
-	private Integer nodeId;
-	private Integer mediaId;
+	private Long nodeId;
+	private Long mediaId;
 
 	public BuntataNodeMedia()
 	{
 	}
 
-	public BuntataNodeMedia(int id, Date createdOn, Date updatedOn)
+	public BuntataNodeMedia(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public Integer getNodeId()
+	public Long getNodeId()
 	{
 		return nodeId;
 	}
 
-	public BuntataNodeMedia setNodeId(Integer nodeId)
+	public BuntataNodeMedia setNodeId(Long nodeId)
 	{
 		this.nodeId = nodeId;
 		return this;
 	}
 
-	public Integer getMediaId()
+	public Long getMediaId()
 	{
 		return mediaId;
 	}
 
-	public BuntataNodeMedia setMediaId(Integer mediaId)
+	public BuntataNodeMedia setMediaId(Long mediaId)
 	{
 		this.mediaId = mediaId;
 		return this;
@@ -68,8 +70,8 @@ public class BuntataNodeMedia extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataNodeMedia{" +
-				"nodeId=" + nodeId +
-				", mediaId=" + mediaId +
-				"} " + super.toString();
+			"nodeId=" + nodeId +
+			", mediaId=" + mediaId +
+			"} " + super.toString();
 	}
 }

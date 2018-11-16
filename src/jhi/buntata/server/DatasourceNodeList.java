@@ -29,7 +29,7 @@ public class DatasourceNodeList extends ServerResource
 
 	private final NodeDAO dao = new NodeDAO();
 
-	private int      id   = -1;
+	private Long     id   = null;
 	private NodeType type = NodeType.ALL;
 
 	public DatasourceNodeList()
@@ -42,7 +42,7 @@ public class DatasourceNodeList extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(this.getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(this.getRequestAttributes().get("id").toString());
 		}
 		catch (NumberFormatException | NullPointerException var3)
 		{

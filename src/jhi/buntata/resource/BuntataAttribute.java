@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -35,7 +37,7 @@ public class BuntataAttribute extends DatabaseObject
 	{
 	}
 
-	public BuntataAttribute(int id, Date createdOn, Date updatedOn)
+	public BuntataAttribute(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}

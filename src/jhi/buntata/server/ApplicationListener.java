@@ -20,7 +20,9 @@ import java.util.concurrent.*;
 
 import javax.servlet.*;
 
+import jhi.buntata.server.auth.*;
 import jhi.buntata.server.job.*;
+import jhi.database.server.*;
 
 /**
  * {@link ApplicationListener} is the main {@link ServletContextListener}. It schedules {@link DatasourceSizeJob}s set given intervals to update the
@@ -35,6 +37,19 @@ public class ApplicationListener implements ServletContextListener
 	@Override
 	public void contextInitialized(ServletContextEvent sce)
 	{
+		String database = sce.getServletContext().getInitParameter("database");
+		String username = sce.getServletContext().getInitParameter("username");
+		String password = sce.getServletContext().getInitParameter("password");
+		String masterUsername = sce.getServletContext().getInitParameter("masterUsername");
+		String masterPassword = sce.getServletContext().getInitParameter("masterPassword");
+
+		CustomVerifier.setMasterUsername(masterUsername);
+		CustomVerifier.setMasterPassword(masterPassword);
+
+		database = database.replace(Database.DatabaseType.MYSQL.getConnectionString(), "");
+
+		Database.init(database, username, password);
+
 		// Start the scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		// Run the size calculation job every 15 minutes

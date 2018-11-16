@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Information & Computational Sciences, The James Hutton Institute
+ * Copyright 2018 Information & Computational Sciences, The James Hutton Institute
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package jhi.buntata.data;
+package jhi.buntata.test;
 
-import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
+import okhttp3.*;
+import retrofit2.Call;
+import retrofit2.http.*;
 
 /**
- * {@link DatabaseObjectParser} is an interface defining how a {@link DatabaseObject} should be parsed.
- *
  * @author Sebastian Raubach
  */
-
-interface DatabaseObjectParser<T extends DatabaseObject>
+public interface ApiProvider
 {
-	T parse(ResultSet rs, boolean includeForeign) throws SQLException;
+	@GET("datasource")
+	Call<List<BuntataDatasource>> getAllDatasources();
+
+	@PUT("datasource/{id}")
+	Call<ResponseBody> putDatasource(@Path("id") String id, @Body BuntataDatasource datasource);
 }

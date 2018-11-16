@@ -24,6 +24,9 @@ import java.util.stream.*;
 
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.query.*;
+import jhi.database.shared.exception.*;
 
 /**
  * {@link MySqlToSqLiteConverter} converts the information for a single data source from MySQL to SQLite. <p> This is all run outside of Tomcat to
@@ -36,15 +39,8 @@ public class MySqlToSqLiteConverter
 	private final File target;
 	private final File folder;
 
-	private Connection sourceConnection;
-	private Connection targetConnection;
-
-	private final String database;
-	private final String username;
-	private final String password;
-
 	public static void main(String[] args)
-		throws IOException, SQLException
+		throws IOException
 	{
 		int i = 0;
 
@@ -64,13 +60,14 @@ public class MySqlToSqLiteConverter
 	 * @throws IOException  Thrown if any file i/o operation fails
 	 * @throws SQLException Thrown if any database interaction fails
 	 */
-	private MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password) throws IOException, SQLException
+	private MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password)
+		throws IOException
 	{
 		this.target = target;
 		this.folder = target.getParentFile();
-		this.database = database;
-		this.username = username;
-		this.password = password;
+		this.folder.mkdirs();
+
+		Database.init(database, username, password);
 
 		// Copy the template database to a new location. Then write to it later.
 		Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -80,32 +77,24 @@ public class MySqlToSqLiteConverter
 		if (copyrightSource.exists())
 			Files.copy(copyrightSource.toPath(), copyrightTarget.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-		// Establish the database connections
-		sourceConnection = getSourceConnection();
-		targetConnection = getTargetConnection();
-
 		// Copy the data source
 		copyDataSources(id);
 		// Copy all the nodes of this data source, then get their ids
-		List<Integer> nodeIds = copyNodes(id);
+		List<Long> nodeIds = copyNodes(id);
 		// Copy all the attributes for the node ids, then get their ids
-		List<Integer> attributeIds = copyAttributes(nodeIds);
+		List<Long> attributeIds = copyAttributes(nodeIds);
 		// Copy all the attribute data for the node and attribute ids
 		copyAttributeData(nodeIds, attributeIds);
 		// Copy all the media types, then get their ids
-		List<Integer> mediaTypeIds = copyMediaTypes(nodeIds);
+		List<Long> mediaTypeIds = copyMediaTypes(nodeIds);
 		// Copy all the media items, then get their ids
-		List<Integer> mediaIds = copyMedia(nodeIds, mediaTypeIds, includeVideos);
+		List<Long> mediaIds = copyMedia(nodeIds, mediaTypeIds, includeVideos);
 		// Copy all the node-media relationships
 		copyNodeMedia(nodeIds, mediaIds);
 		// Copy all the node-node relationships
 		copyRelationships(nodeIds);
 		// Copy all the node-node similarities
 		copySimilarities(nodeIds);
-
-		/* Close the connections */
-		sourceConnection.close();
-		targetConnection.close();
 	}
 
 	/**
@@ -129,31 +118,32 @@ public class MySqlToSqLiteConverter
 	 *
 	 * @param nodeIds The {@link BuntataNode} ids
 	 */
-	private void copyRelationships(List<Integer> nodeIds)
+	private void copyRelationships(List<Long> nodeIds)
 	{
 		if (nodeIds.size() < 1)
 			return;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM relationships WHERE parent IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND child IN (" + getFormattedPlaceholder(nodeIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `relationships` (`id`, `parent`, `child`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataRelationship> streamer = new DatabaseObjectQuery<BuntataRelationship>("SELECT * FROM relationships WHERE parent IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND child IN (" + getFormattedPlaceholder(nodeIds.size()) + ")")
+				.setLongs(nodeIds)
+				.setLongs(nodeIds)
+				.getStreamer(RelationshipDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
+			BuntataRelationship relationship;
 
-			while (rs.next())
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = RelationshipDAO.Writer.Inst.get().getStatement(database);
+			while ((relationship = streamer.next()) != null)
 			{
-				BuntataRelationship relationship = RelationshipDAO.Parser.Inst.get().parse(rs, false);
-				RelationshipDAO.Writer.Inst.get().write(relationship, targetStmt);
+				RelationshipDAO.Writer.Inst.get().writeBatched(relationship, stmt);
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -164,31 +154,31 @@ public class MySqlToSqLiteConverter
 	 *
 	 * @param nodeIds The {@link BuntataNode} ids
 	 */
-	private void copySimilarities(List<Integer> nodeIds)
+	private void copySimilarities(List<Long> nodeIds)
 	{
 		if (nodeIds.size() < 1)
 			return;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM similarities WHERE node_a_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND node_b_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `similarities` (`id`, `node_a_id`, `node_b_id`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataSimilarity> streamer = new DatabaseObjectQuery<BuntataSimilarity>("SELECT * FROM similarities WHERE node_a_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND node_b_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")")
+				.setLongs(nodeIds)
+				.setLongs(nodeIds)
+				.getStreamer(SimilarityDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			BuntataSimilarity similarity;
+			DatabaseStatement stmt = SimilarityDAO.Writer.Inst.get().getStatement(database);
+			while ((similarity = streamer.next()) != null)
 			{
-				BuntataSimilarity similarity = SimilarityDAO.Parser.Inst.get().parse(rs, false);
-				SimilarityDAO.Writer.Inst.get().write(similarity, targetStmt);
+				SimilarityDAO.Writer.Inst.get().writeBatched(similarity, stmt);
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -200,31 +190,31 @@ public class MySqlToSqLiteConverter
 	 * @param nodeIds  The {@link BuntataNode} ids
 	 * @param mediaIds The {@link BuntataMedia} ids
 	 */
-	private void copyNodeMedia(List<Integer> nodeIds, List<Integer> mediaIds)
+	private void copyNodeMedia(List<Long> nodeIds, List<Long> mediaIds)
 	{
 		if (nodeIds.size() < 1 || mediaIds.size() < 1)
 			return;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM nodemedia WHERE node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND media_id IN (" + getFormattedPlaceholder(mediaIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `nodemedia` (`id`, `node_id`, `media_id`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
-			for (Integer id : mediaIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataNodeMedia> streamer = new DatabaseObjectQuery<BuntataNodeMedia>("SELECT * FROM nodemedia WHERE node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND media_id IN (" + getFormattedPlaceholder(mediaIds.size()) + ")")
+				.setLongs(nodeIds)
+				.setLongs(mediaIds)
+				.getStreamer(NodeMediaDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			BuntataNodeMedia nodeMedia;
+			DatabaseStatement stmt = NodeMediaDAO.Writer.Inst.get().getStatement(database);
+			while ((nodeMedia = streamer.next()) != null)
 			{
-				BuntataNodeMedia media = NodeMediaDAO.Parser.Inst.get().parse(rs, false);
-				NodeMediaDAO.Writer.Inst.get().write(media, targetStmt);
+				NodeMediaDAO.Writer.Inst.get().writeBatched(nodeMedia, stmt);
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -238,46 +228,39 @@ public class MySqlToSqLiteConverter
 	 * @param includeVideos Should videos be included?
 	 * @return The ids of the {@link BuntataMedia} objects that have been copied
 	 */
-	private List<Integer> copyMedia(List<Integer> nodeIds, List<Integer> mediaTypeIds, boolean includeVideos)
+	private List<Long> copyMedia(List<Long> nodeIds, List<Long> mediaTypeIds, boolean includeVideos)
 	{
-		List<Integer> ids = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 
 		if (nodeIds.size() < 1 || mediaTypeIds.size() < 1)
 			return ids;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM media WHERE EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")) AND media.mediatype_id IN (" + getFormattedPlaceholder(mediaTypeIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `media` (`id`, `mediatype_id`, `name`, `description`, `internal_link`, `external_link`, `external_link_description`, `copyright`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			 PreparedStatement selectMediaType = sourceConnection.prepareStatement("SELECT * FROM mediatypes WHERE id = ?"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
-			for (Integer id : mediaTypeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataMedia> streamer = new DatabaseObjectQuery<BuntataMedia>("SELECT * FROM media WHERE EXISTS (SELECT 1 FROM nodemedia WHERE nodemedia.media_id = media.id AND nodemedia.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ")) AND media.mediatype_id IN (" + getFormattedPlaceholder(mediaTypeIds.size()) + ")")
+				.setLongs(nodeIds)
+				.setLongs(mediaTypeIds)
+				.getStreamer(MediaDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			BuntataMedia media;
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = MediaDAO.Writer.Inst.get().getStatement(database);
+			while ((media = streamer.next()) != null)
 			{
-				BuntataMedia media = MediaDAO.Parser.Inst.get().parse(rs, false);
-
 				File source = new File(media.getInternalLink());
 
-				selectMediaType.setInt(1, media.getMediaTypeId());
+				BuntataMediaType type = new DatabaseObjectQuery<BuntataMediaType>("SELECT * FROM mediatypes WHERE id = ?")
+					.setLong(media.getMediaTypeId())
+					.run()
+					.getObject(MediaTypeDAO.Parser.Inst.get());
 
-				// Check if this is a video
-				boolean isVideo = false;
-				ResultSet rsTemp = selectMediaType.executeQuery();
-				if (rsTemp.next())
-				{
-					BuntataMediaType type = MediaTypeDAO.Parser.Inst.get().parse(rsTemp, false);
-					isVideo = BuntataMediaType.TYPE_VIDEO.equals(type.getName());
-				}
-				rsTemp.close();
+				boolean isVideo = BuntataMediaType.TYPE_VIDEO.equals(type.getName());
 
 				// Set the internal link of videos to null if this has been requested by the client. The external link will still be available (YouTube, etc.)
 				if (isVideo && !includeVideos)
 				{
+					System.out.println("SKIP");
 					media.setInternalLink(null);
 				}
 				else
@@ -285,23 +268,27 @@ public class MySqlToSqLiteConverter
 					// Now copy the media file
 					if (source.exists())
 					{
+						System.out.println(source.getAbsolutePath());
+						System.out.println(new File(folder, source.getName()).getAbsolutePath());
 						Files.copy(source.toPath(), new File(folder, source.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
 						media.setInternalLink(source.getName());
 					}
 					else
 					{
+						System.out.println("FILE NOT FOUND");
 						media.setInternalLink(null);
 					}
 				}
 
-				MediaDAO.Writer.Inst.get().write(media, targetStmt);
+				MediaDAO.Writer.Inst.get().writeBatched(media, stmt);
 
 				ids.add(media.getId());
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException | IOException e)
+		catch (DatabaseException | SQLException | IOException e)
 		{
 			e.printStackTrace();
 		}
@@ -315,33 +302,34 @@ public class MySqlToSqLiteConverter
 	 * @param nodeIds The {@link BuntataNode} ids
 	 * @return The ids of the copied {@link BuntataMediaType}s
 	 */
-	private List<Integer> copyMediaTypes(List<Integer> nodeIds)
+	private List<Long> copyMediaTypes(List<Long> nodeIds)
 	{
-		List<Integer> ids = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 
 		if (nodeIds.size() < 1)
 			return ids;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM mediatypes WHERE EXISTS (SELECT 1 FROM media LEFT JOIN nodemedia ON nodemedia.media_id = media.id WHERE media.mediatype_id = mediatypes.id AND nodemedia.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + "))");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `mediatypes` (`id`, `name`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataMediaType> streamer = new DatabaseObjectQuery<BuntataMediaType>("SELECT * FROM mediatypes WHERE EXISTS (SELECT 1 FROM media LEFT JOIN nodemedia ON nodemedia.media_id = media.id WHERE media.mediatype_id = mediatypes.id AND nodemedia.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + "))")
+				.setLongs(nodeIds)
+				.getStreamer(MediaTypeDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			BuntataMediaType type;
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = MediaTypeDAO.Writer.Inst.get().getStatement(database);
+			while ((type = streamer.next()) != null)
 			{
-				BuntataMediaType mediaType = MediaTypeDAO.Parser.Inst.get().parse(rs, false);
-				MediaTypeDAO.Writer.Inst.get().write(mediaType, targetStmt);
+				MediaTypeDAO.Writer.Inst.get().writeBatched(type, stmt);
 
-				ids.add(mediaType.getId());
+				ids.add(type.getId());
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -355,31 +343,31 @@ public class MySqlToSqLiteConverter
 	 * @param nodeIds      The {@link BuntataNode} ids
 	 * @param attributeIds The {@link BuntataAttribute} ids
 	 */
-	private void copyAttributeData(List<Integer> nodeIds, List<Integer> attributeIds)
+	private void copyAttributeData(List<Long> nodeIds, List<Long> attributeIds)
 	{
 		if (nodeIds.size() < 1 || attributeIds.size() < 1)
 			return;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM attributevalues WHERE node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND attribute_id IN (" + getFormattedPlaceholder(attributeIds.size()) + ")");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `attributevalues` (`id`, `node_id`, `attribute_id`, `value`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
-			for (Integer id : attributeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataAttributeValue> streamer = new DatabaseObjectQuery<BuntataAttributeValue>("SELECT * FROM attributevalues WHERE node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + ") AND attribute_id IN (" + getFormattedPlaceholder(attributeIds.size()) + ")")
+				.setLongs(nodeIds)
+				.setLongs(attributeIds)
+				.getStreamer(AttributeValueDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			BuntataAttributeValue value;
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = AttributeValueDAO.Writer.Inst.get().getStatement(database);
+			while ((value = streamer.next()) != null)
 			{
-				BuntataAttributeValue value = AttributeValueDAO.Parser.Inst.get().parse(rs, false);
-				AttributeValueDAO.Writer.Inst.get().write(value, targetStmt);
+				AttributeValueDAO.Writer.Inst.get().writeBatched(value, stmt);
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -391,33 +379,34 @@ public class MySqlToSqLiteConverter
 	 * @param nodeIds The {@link BuntataNode} ids
 	 * @return The ids of the copied {@link BuntataAttribute}s
 	 */
-	private List<Integer> copyAttributes(List<Integer> nodeIds)
+	private List<Long> copyAttributes(List<Long> nodeIds)
 	{
-		List<Integer> ids = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 
 		if (nodeIds.size() < 1)
 			return ids;
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM attributes WHERE EXISTS (SELECT 1 FROM attributevalues WHERE attributevalues.attribute_id = attributes.id AND attributevalues.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + "))");
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `attributes` (`id`, `name`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?)"))
+		try
 		{
-			int i = 1;
-			for (Integer id : nodeIds)
-				sourceStmt.setInt(i++, id);
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataAttribute> streamer = new DatabaseObjectQuery<BuntataAttribute>("SELECT * FROM attributes WHERE EXISTS (SELECT 1 FROM attributevalues WHERE attributevalues.attribute_id = attributes.id AND attributevalues.node_id IN (" + getFormattedPlaceholder(nodeIds.size()) + "))")
+				.setLongs(nodeIds)
+				.getStreamer(AttributeDAO.Parser.Inst.get());
 
-			ResultSet rs = sourceStmt.executeQuery();
-
-			while (rs.next())
+			BuntataAttribute attribute;
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = AttributeDAO.Writer.Inst.get().getStatement(database);
+			while ((attribute = streamer.next()) != null)
 			{
-				BuntataAttribute attribute = AttributeDAO.Parser.Inst.get().parse(rs, false);
-				AttributeDAO.Writer.Inst.get().write(attribute, targetStmt);
+				AttributeDAO.Writer.Inst.get().writeBatched(attribute, stmt);
 
 				ids.add(attribute.getId());
 			}
-
-			rs.close();
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -431,23 +420,31 @@ public class MySqlToSqLiteConverter
 	 * @param id The {@link BuntataDatasource} id
 	 * @return The ids of the copied {@link BuntataNode}s
 	 */
-	private List<Integer> copyNodes(int id)
+	private List<Long> copyNodes(int id)
 	{
-		List<Integer> ids = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM nodes WHERE datasource_id = " + id);
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `nodes` (`id`, `datasource_id`, `name`, `description`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?)");
-			 ResultSet rs = sourceStmt.executeQuery())
+		try
 		{
-			while (rs.next())
+			DatabaseObjectQuery.DatabaseObjectStreamer<BuntataNode> streamer = new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes WHERE datasource_id = ?")
+				.setLong(id)
+				.getStreamer(NodeDAO.Parser.Inst.get());
+
+			BuntataNode node;
+			Database database = connectToSqlite();
+			database.getConnection().setAutoCommit(false);
+			DatabaseStatement stmt = NodeDAO.Writer.Inst.get().getStatement(database);
+			while ((node = streamer.next()) != null)
 			{
-				BuntataNode node = NodeDAO.Parser.Inst.get().parse(rs, false);
-				NodeDAO.Writer.Inst.get().write(node, targetStmt);
+				NodeDAO.Writer.Inst.get().writeBatched(node, stmt);
 
 				ids.add(node.getId());
 			}
+			stmt.executeBatch();
+			database.getConnection().setAutoCommit(true);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException | SQLException e)
 		{
 			e.printStackTrace();
 		}
@@ -462,79 +459,46 @@ public class MySqlToSqLiteConverter
 	 */
 	private void copyDataSources(int id)
 	{
-		try (PreparedStatement sourceStmt = sourceConnection.prepareStatement("SELECT * FROM datasources WHERE id = " + id);
-			 PreparedStatement targetStmt = targetConnection.prepareStatement("INSERT INTO `datasources` (`id`, `name`, `description`, `version_number`, `data_provider`, `contact`, `show_key_name`, `show_single_child`, `icon`, `size_total`, `size_no_video`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			 ResultSet rs = sourceStmt.executeQuery())
+		try
 		{
-			if (rs.next())
+			BuntataDatasource ds = new DatabaseObjectQuery<BuntataDatasource>("SELECT * FROM datasources WHERE id = ?")
+				.setLong(id)
+				.run()
+				.getObject(DatasourceDAO.Parser.Inst.get());
+
+			File icon = null;
+
+			if (ds.getIcon() != null)
+				icon = new File(ds.getIcon());
+
+			// Now copy the media file
+			if (icon != null && icon.exists() && icon.isFile())
 			{
-				BuntataDatasource ds = DatasourceDAO.Parser.Inst.get().parse(rs, false);
-
-				File icon = null;
-
-				if (ds.getIcon() != null)
-					icon = new File(ds.getIcon());
-
-				// Now copy the media file
-				if (icon != null && icon.exists() && icon.isFile())
+				try
 				{
-					try
-					{
-						Files.copy(icon.toPath(), new File(folder, icon.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-						ds.setIcon(icon.getName());
-					}
-					catch (IOException e)
-					{
-						e.printStackTrace();
-					}
+					Files.copy(icon.toPath(), new File(folder, icon.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+					ds.setIcon(icon.getName());
 				}
-
-				DatasourceDAO.Writer.Inst.get().write(ds, targetStmt);
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
 			}
+
+			Database database = connectToSqlite();
+			DatabaseStatement stmt = DatasourceDAO.Writer.Inst.get().getStatement(database);
+			DatasourceDAO.Writer.Inst.get().write(ds, stmt);
+			database.close();
 		}
-		catch (SQLException e)
+		catch (DatabaseException e)
 		{
 			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * Establish a connection to the source MySQL database
-	 *
-	 * @return The {@link Connection} to the source MySQL database
-	 */
-	private Connection getSourceConnection()
+	private Database connectToSqlite()
+		throws DatabaseException
 	{
-		try
-		{
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-			return DriverManager.getConnection(database, username, password);
-		}
-		catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e)
-		{
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	/**
-	 * Establish a connection to the target SQLite database
-	 *
-	 * @return The {@link Connection} to the target SQLite database
-	 */
-	private Connection getTargetConnection()
-	{
-		try
-		{
-			Class.forName("org.sqlite.JDBC").newInstance();
-			return DriverManager.getConnection("jdbc:sqlite://" + target.getAbsolutePath());
-		}
-		catch (InstantiationException | IllegalAccessException | ClassNotFoundException | SQLException e)
-		{
-			e.printStackTrace();
-		}
-
-		return null;
+		return Database.connect(Database.DatabaseType.SQLITE, target.getAbsolutePath(), null, null);
 	}
 }

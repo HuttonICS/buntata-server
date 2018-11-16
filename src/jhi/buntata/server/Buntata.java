@@ -17,12 +17,16 @@
 package jhi.buntata.server;
 
 import org.restlet.*;
+import org.restlet.data.*;
 import org.restlet.engine.application.*;
 import org.restlet.resource.*;
 import org.restlet.routing.*;
+import org.restlet.security.*;
 import org.restlet.service.*;
 
 import java.util.*;
+
+import jhi.buntata.server.auth.*;
 
 /**
  * {@link Buntata} is the main Restlet {@link Application}. It handles the routing of the incoming requests.
@@ -31,6 +35,9 @@ import java.util.*;
  */
 public class Buntata extends Application
 {
+	private ChallengeAuthenticator authenticator;
+	private MethodAuthorizer       authorizer;
+
 	public Buntata()
 	{
 		// Set information about API
@@ -40,17 +47,32 @@ public class Buntata extends Application
 		setAuthor("Sebastian Raubach, Information & Computational Sciences");
 	}
 
+	private void setUpAuthentication(Context context)
+	{
+		authorizer = new MethodAuthorizer();
+		authorizer.getAnonymousMethods().add(Method.GET);
+		authorizer.getAnonymousMethods().add(Method.POST);
+		authorizer.getAuthenticatedMethods().add(Method.PUT);
+		authorizer.getAuthenticatedMethods().add(Method.DELETE);
+
+		authenticator = new ChallengeAuthenticator(context, true, ChallengeScheme.HTTP_BASIC, "Buntata", new CustomVerifier());
+	}
+
 	@Override
 	public Restlet createInboundRoot()
 	{
+		Context context = getContext();
+
 		// Create new router
-		Router router = new Router(getContext());
+		Router router = new Router(context);
+
+		setUpAuthentication(context);
 
 		// Set the encoder
-		Filter encoder = new Encoder(getContext(), false, true, new EncoderService(true));
+		Filter encoder = new Encoder(context, false, true, new EncoderService(true));
 		encoder.setNext(router);
 		// Set the Cors filter
-		CorsFilter corsFilter = new CorsFilter(getContext(), encoder);
+		CorsFilter corsFilter = new CorsFilter(context, encoder);
 		corsFilter.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
 		corsFilter.setAllowedCredentials(true);
 		corsFilter.setSkippingResourceForCorsOptions(false);
@@ -68,7 +90,10 @@ public class Buntata extends Application
 		attachToRouter(router, "/node/{id}", Node.class);
 		attachToRouter(router, "/node/{id}/media", NodeMedia.class);
 
-		return corsFilter;
+		authenticator.setNext(authorizer);
+		authorizer.setNext(corsFilter);
+
+		return authenticator;
 	}
 
 	private static void attachToRouter(Router router, String url, Class<? extends ServerResource> clazz)

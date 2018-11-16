@@ -19,13 +19,16 @@ package jhi.buntata.data;
 import java.sql.*;
 
 import jhi.buntata.resource.*;
+import jhi.database.server.*;
+import jhi.database.server.parser.*;
+import jhi.database.shared.exception.*;
 
 /**
  * @author Sebastian Raubach
  */
 public class RelationshipDAO
 {
-	public static class Writer implements DatabaseObjectWriter<BuntataRelationship>
+	public static class Writer extends DatabaseObjectWriter<BuntataRelationship>
 	{
 		public static final class Inst
 		{
@@ -50,26 +53,54 @@ public class RelationshipDAO
 		}
 
 		@Override
-		public void write(BuntataRelationship object, PreparedStatement stmt) throws SQLException
+		public DatabaseStatement getStatement(Database database)
+			throws DatabaseException
+		{
+			return database.prepareStatement("INSERT INTO `relationships` (`id`, `parent`, `child`, `created_on`, `updated_on`) VALUES (?, ?, ?, ?, ?)");
+		}
+
+		@Override
+		public void write(BuntataRelationship object, DatabaseStatement stmt)
+			throws DatabaseException
 		{
 			int i = 1;
-			stmt.setInt(i++, object.getId());
-			stmt.setInt(i++, object.getParent());
-			stmt.setInt(i++, object.getChild());
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getParent());
+			stmt.setLong(i++, object.getChild());
 			if (object.getCreatedOn() != null)
-				stmt.setLong(i++, object.getCreatedOn().getTime());
+				setDate(i++, object.getCreatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.DATE);
 			if (object.getUpdatedOn() != null)
-				stmt.setLong(i++, object.getUpdatedOn().getTime());
+				setDate(i++, object.getUpdatedOn(), stmt);
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.executeUpdate();
+			stmt.execute();
+		}
+
+		@Override
+		public void writeBatched(BuntataRelationship object, DatabaseStatement stmt)
+			throws DatabaseException
+		{
+			int i = 1;
+			stmt.setLong(i++, object.getId());
+			stmt.setLong(i++, object.getParent());
+			stmt.setLong(i++, object.getChild());
+			if (object.getCreatedOn() != null)
+				setDate(i++, object.getCreatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.DATE);
+			if (object.getUpdatedOn() != null)
+				setDate(i++, object.getUpdatedOn(), stmt);
+			else
+				stmt.setNull(i++, Types.TIMESTAMP);
+
+			stmt.addBatch();
 		}
 	}
 
-	public static class Parser implements DatabaseObjectParser<BuntataRelationship>
+	public static class Parser extends DatabaseObjectParser<BuntataRelationship>
 	{
 		public static final class Inst
 		{
@@ -94,11 +125,12 @@ public class RelationshipDAO
 		}
 
 		@Override
-		public BuntataRelationship parse(ResultSet rs, boolean includeForeign) throws SQLException
+		public BuntataRelationship parse(DatabaseResult rs, boolean includeForeign)
+			throws DatabaseException
 		{
-			return new BuntataRelationship(rs.getInt(BuntataRelationship.FIELD_ID), rs.getTimestamp(BuntataRelationship.FIELD_CREATED_ON), rs.getTimestamp(BuntataRelationship.FIELD_UPDATED_ON))
-					.setParent(rs.getInt(BuntataRelationship.FIELD_PARENT))
-					.setChild(rs.getInt(BuntataRelationship.FIELD_CHILD));
+			return new BuntataRelationship(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+				.setParent(rs.getLong(BuntataRelationship.FIELD_PARENT))
+				.setChild(rs.getLong(BuntataRelationship.FIELD_CHILD));
 		}
 	}
 }

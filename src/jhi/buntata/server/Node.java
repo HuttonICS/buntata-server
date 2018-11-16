@@ -34,8 +34,8 @@ public class Node extends ServerResource
 	public static final String PARAM_NODE_PARENT_ID = "nodeParentId";
 
 	private final NodeDAO dao          = new NodeDAO();
-	private       int     id           = -1;
-	private       Integer nodeParentId = null;
+	private       Long    id           = null;
+	private       Long    nodeParentId = null;
 
 	@Override
 	public void doInit()
@@ -44,7 +44,7 @@ public class Node extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{
@@ -52,7 +52,7 @@ public class Node extends ServerResource
 
 		try
 		{
-			nodeParentId = Integer.parseInt(getQueryValue(PARAM_NODE_PARENT_ID));
+			nodeParentId = Long.parseLong(getQueryValue(PARAM_NODE_PARENT_ID));
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{
@@ -63,7 +63,7 @@ public class Node extends ServerResource
 	public List<BuntataNode> getJson()
 	{
 		List<BuntataNode> result = new ArrayList<>();
-		if (id != -1)
+		if (id != null)
 		{
 			BuntataNode ds = dao.get(id);
 			if (ds != null)

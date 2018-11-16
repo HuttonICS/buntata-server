@@ -32,7 +32,7 @@ import jhi.buntata.resource.*;
 public class Datasource extends ServerResource
 {
 	private final DatasourceDAO dao = new DatasourceDAO();
-	private       int           id  = -1;
+	private       Long          id  = null;
 
 	@Override
 	public void doInit()
@@ -41,10 +41,32 @@ public class Datasource extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{
+		}
+	}
+
+	@Put("json")
+	public boolean putJson(BuntataDatasource datasource)
+	{
+		if (id == null)
+		{
+			throw new ResourceException(422);
+		}
+		else
+		{
+			BuntataDatasource ds = dao.get(id);
+
+			if (ds != null)
+			{
+				throw new ResourceException(409);
+			}
+			else
+			{
+				return dao.add(datasource);
+			}
 		}
 	}
 
@@ -52,7 +74,7 @@ public class Datasource extends ServerResource
 	public List<BuntataDatasource> getJson()
 	{
 		List<BuntataDatasource> result = new ArrayList<>();
-		if (id == -1)
+		if (id == null)
 		{
 			result = dao.getAll(false);
 		}

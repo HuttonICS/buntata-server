@@ -38,7 +38,7 @@ import jhi.buntata.server.job.*;
  */
 public class DatasourceDownload extends ServerResource
 {
-	private int           id            = -1;
+	private Long          id            = null;
 	private boolean       includeVideos = true;
 	private DatasourceDAO dao           = new DatasourceDAO();
 
@@ -67,7 +67,7 @@ public class DatasourceDownload extends ServerResource
 		// Try to parse the id
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{
@@ -91,7 +91,7 @@ public class DatasourceDownload extends ServerResource
 		FileRepresentation representation = null;
 
 		// Check if the id is set
-		if (id != -1)
+		if (id != null)
 		{
 			BuntataDatasource ds = dao.get(id);
 
@@ -108,7 +108,7 @@ public class DatasourceDownload extends ServerResource
 						ga.event()
 						  .eventCategory("dataset")
 						  .eventAction("download")
-						  .eventLabel(Integer.toString(id))
+						  .eventLabel(Long.toString(id))
 						  .sendAsync();
 					}
 

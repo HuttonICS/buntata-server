@@ -40,7 +40,7 @@ public class Media extends ServerResource
 	public static final String PARAM_SIZE = "small";
 
 	private final MediaDAO dao   = new MediaDAO();
-	private       int      id    = -1;
+	private       Long     id    = null;
 	private       boolean  small = false;
 
 	@Override
@@ -50,7 +50,7 @@ public class Media extends ServerResource
 
 		try
 		{
-			this.id = Integer.parseInt(getRequestAttributes().get("id").toString());
+			this.id = Long.parseLong(getRequestAttributes().get("id").toString());
 		}
 		catch (NullPointerException | NumberFormatException e)
 		{

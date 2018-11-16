@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+import jhi.database.shared.util.*;
+
 /**
  * @author Sebastian Raubach
  */
@@ -31,8 +33,8 @@ public class BuntataAttributeValue extends DatabaseObject
 	public static final String FIELD_ATTRIBUTE_ID = "attribute_id";
 	public static final String FIELD_VALUE        = "value";
 
-	private Integer          nodeId;
-	private Integer          attributeId;
+	private Long             nodeId;
+	private Long             attributeId;
 	private String           value;
 	private BuntataAttribute attribute;
 
@@ -40,28 +42,28 @@ public class BuntataAttributeValue extends DatabaseObject
 	{
 	}
 
-	public BuntataAttributeValue(int id, Date createdOn, Date updatedOn)
+	public BuntataAttributeValue(Long id, Date createdOn, Date updatedOn)
 	{
 		super(id, createdOn, updatedOn);
 	}
 
-	public Integer getNodeId()
+	public Long getNodeId()
 	{
 		return nodeId;
 	}
 
-	public BuntataAttributeValue setNodeId(Integer nodeId)
+	public BuntataAttributeValue setNodeId(Long nodeId)
 	{
 		this.nodeId = nodeId;
 		return this;
 	}
 
-	public Integer getAttributeId()
+	public Long getAttributeId()
 	{
 		return attributeId;
 	}
 
-	public BuntataAttributeValue setAttributeId(Integer attributeId)
+	public BuntataAttributeValue setAttributeId(Long attributeId)
 	{
 		this.attributeId = attributeId;
 		return this;
@@ -93,10 +95,10 @@ public class BuntataAttributeValue extends DatabaseObject
 	public String toString()
 	{
 		return "BuntataAttributeValue{" +
-				"nodeId=" + nodeId +
-				", attributeId=" + attributeId +
-				", value='" + value + '\'' +
-				", attribute=" + attribute +
-				"} " + super.toString();
+			"nodeId=" + nodeId +
+			", attributeId=" + attributeId +
+			", value='" + value + '\'' +
+			", attribute=" + attribute +
+			"} " + super.toString();
 	}
 }
