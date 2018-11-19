@@ -46,6 +46,22 @@ public class NodeDAO
 		return new ArrayList<>();
 	}
 
+	public boolean add(BuntataNode node)
+	{
+		try
+		{
+			Database database = Database.connect();
+			Writer.Inst.get().write(node, Writer.Inst.get().getStatement(database));
+			database.close();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public BuntataNode get(Long id)
 	{
 		try

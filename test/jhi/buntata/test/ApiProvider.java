@@ -33,4 +33,7 @@ public interface ApiProvider
 
 	@PUT("datasource/{id}")
 	Call<ResponseBody> putDatasource(@Path("id") String id, @Body BuntataDatasource datasource);
+
+	@PUT("node/{id}")
+	Call<ResponseBody> putNode(@Path("id") String id, @Body BuntataNode node);
 }

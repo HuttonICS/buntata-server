@@ -59,6 +59,28 @@ public class Node extends ServerResource
 		}
 	}
 
+	@Put("json")
+	public boolean putJson(BuntataNode node)
+	{
+		if (id == null)
+		{
+			throw new ResourceException(422);
+		}
+		else
+		{
+			BuntataNode ds = dao.get(id);
+
+			if (ds != null)
+			{
+				throw new ResourceException(409);
+			}
+			else
+			{
+				return dao.add(node);
+			}
+		}
+	}
+
 	@Get("json")
 	public List<BuntataNode> getJson()
 	{
