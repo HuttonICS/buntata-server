@@ -65,6 +65,41 @@ public class Media extends ServerResource
 		}
 	}
 
+	@Post("json")
+	public boolean postJson(BuntataMedia media)
+	{
+		if (id != null)
+		{
+			throw new ResourceException(400);
+		}
+		else
+		{
+			return dao.add(media);
+		}
+	}
+
+	@Put("json")
+	public boolean putJson(BuntataMedia media)
+	{
+		if (id == null)
+		{
+			throw new ResourceException(422);
+		}
+		else
+		{
+			BuntataMedia md = dao.get(id);
+
+			if (md != null)
+			{
+				throw new ResourceException(409);
+			}
+			else
+			{
+				return dao.add(media);
+			}
+		}
+	}
+
 	@Get()
 	public Representation getImage()
 	{

@@ -28,8 +28,14 @@ import jhi.database.shared.exception.*;
 /**
  * @author Sebastian Raubach
  */
-public class MediaDAO
+public class MediaDAO extends WriterDAO<BuntataMedia>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataMedia> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
 	public BuntataMedia get(Long id)
 	{
 		try

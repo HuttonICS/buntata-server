@@ -48,6 +48,19 @@ public class Datasource extends ServerResource
 		}
 	}
 
+	@Post("json")
+	public boolean postJson(BuntataDatasource datasource)
+	{
+		if (id != null)
+		{
+			throw new ResourceException(400);
+		}
+		else
+		{
+			return dao.add(datasource);
+		}
+	}
+
 	@Put("json")
 	public boolean putJson(BuntataDatasource datasource)
 	{

@@ -59,6 +59,19 @@ public class Node extends ServerResource
 		}
 	}
 
+	@Post("json")
+	public boolean postJson(BuntataNode node)
+	{
+		if (id != null)
+		{
+			throw new ResourceException(400);
+		}
+		else
+		{
+			return dao.add(node);
+		}
+	}
+
 	@Put("json")
 	public boolean putJson(BuntataNode node)
 	{
@@ -68,9 +81,9 @@ public class Node extends ServerResource
 		}
 		else
 		{
-			BuntataNode ds = dao.get(id);
+			BuntataNode nd = dao.get(id);
 
-			if (ds != null)
+			if (nd != null)
 			{
 				throw new ResourceException(409);
 			}

@@ -72,7 +72,8 @@ public class DatabaseTest
 		assert StringUtils.isNotBlank(server);
 		assert StringUtils.isNotBlank(database);
 		assert StringUtils.isNotBlank(username);
-		assert StringUtils.isNotBlank(tomcatName);
+		assert StringUtils.isNotBlank(masterUsername);
+		assert StringUtils.isNotBlank(tomcatUsername);
 		assert StringUtils.isNotBlank(tomcatName);
 		assert StringUtils.isNotBlank(antPath);
 	}

@@ -28,8 +28,14 @@ import jhi.database.shared.exception.*;
 /**
  * @author Sebastian Raubach
  */
-public class NodeDAO
+public class NodeDAO extends WriterDAO<BuntataNode>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataNode> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
 	public List<BuntataNode> getAll()
 	{
 		try
@@ -44,22 +50,6 @@ public class NodeDAO
 		}
 
 		return new ArrayList<>();
-	}
-
-	public boolean add(BuntataNode node)
-	{
-		try
-		{
-			Database database = Database.connect();
-			Writer.Inst.get().write(node, Writer.Inst.get().getStatement(database));
-			database.close();
-			return true;
-		}
-		catch (DatabaseException e)
-		{
-			e.printStackTrace();
-			return false;
-		}
 	}
 
 	public BuntataNode get(Long id)

@@ -23,8 +23,6 @@ import java.util.*;
 
 import jhi.buntata.resource.*;
 import okhttp3.*;
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.*;
 import retrofit2.converter.jackson.*;
@@ -53,7 +51,7 @@ public class ApiTest extends DatabaseTest
 
 	@Test
 	public void putDatasourceWithoutAuth()
-		throws InterruptedException
+		throws IOException
 	{
 		prepareProvider(null);
 
@@ -65,42 +63,16 @@ public class ApiTest extends DatabaseTest
 			.setShowSingleChild(false)
 			.setVisibility(true)
 			.setIcon("myicon.png");
-		boolean[] wait = {true, true};
-		provider.putDatasource("1", datasource).enqueue(new Callback<ResponseBody>()
-		{
-			@Override
-			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response)
-			{
-				try
-				{
-					wait[0] = false;
-					assert response.raw().code() == 403;
-				}
-				catch (AssertionError e)
-				{
-					wait[1] = false;
-				}
-			}
 
-			@Override
-			public void onFailure(Call<ResponseBody> call, Throwable throwable)
-			{
-				wait[0] = false;
-				wait[1] = false;
-				throw new AssertionError(throwable);
-			}
-		});
+		Response<ResponseBody> response = provider.putDatasource("1", datasource).execute();
 
-		// I know it's bad style to wait for async requests in tests, but this seems to be the best way to test it in this case
-		while (wait[0])
-			Thread.sleep(500);
-
-		assert wait[1];
+		assert !response.isSuccessful();
+		assert response.code() == 403;
 	}
 
 	@Test
 	public void putDatasourceWithAuth()
-		throws InterruptedException
+		throws IOException
 	{
 		String token = Credentials.basic(masterUsername, masterPassword);
 
@@ -118,51 +90,17 @@ public class ApiTest extends DatabaseTest
 			.setShowSingleChild(false)
 			.setVisibility(true)
 			.setIcon("myicon.png");
-		boolean[] wait = {true, true};
-		provider.putDatasource("1", datasource).enqueue(new Callback<ResponseBody>()
-		{
-			@Override
-			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response)
-			{
-				try
-				{
-					wait[0] = false;
-					assert response.raw().code() == 200;
-					assert response.body() != null;
-					try
-					{
-						assert response.body().string().equals("true");
-					}
-					catch (IOException e)
-					{
-						throw new AssertionError(e);
-					}
-				}
-				catch (AssertionError e)
-				{
-					wait[1] = false;
-				}
-			}
+		Response<ResponseBody> response = provider.putDatasource("1", datasource).execute();
 
-			@Override
-			public void onFailure(Call<ResponseBody> call, Throwable throwable)
-			{
-				wait[0] = false;
-				wait[1] = false;
-				throw new AssertionError(throwable);
-			}
-		});
-
-		// I know it's bad style to wait for async requests in tests, but this seems to be the best way to test it in this case
-		while (wait[0])
-			Thread.sleep(500);
-
-		assert wait[1];
+		assert response.isSuccessful();
+		assert response.code() == 200;
+		assert response.body() != null;
+		assert response.body().string().equals("true");
 	}
 
 	@Test
 	public void putNodeWithAuth()
-		throws InterruptedException
+		throws IOException
 	{
 		String token = Credentials.basic(masterUsername, masterPassword);
 
@@ -177,86 +115,51 @@ public class ApiTest extends DatabaseTest
 			.setDescription("Some node description")
 			.setDatasourceId(1L);
 
-		boolean[] wait = {true, true};
-		provider.putNode("1", node).enqueue(new Callback<ResponseBody>()
-		{
-			@Override
-			public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response)
-			{
-				try
-				{
-					wait[0] = false;
-					assert response.raw().code() == 200;
-					assert response.body() != null;
-					try
-					{
-						assert response.body().string().equals("true");
-					}
-					catch (IOException e)
-					{
-						throw new AssertionError(e);
-					}
-				}
-				catch (AssertionError e)
-				{
-					wait[1] = false;
-				}
-			}
+		Response<ResponseBody> response = provider.putNode("1", node).execute();
 
-			@Override
-			public void onFailure(Call<ResponseBody> call, Throwable throwable)
-			{
-				wait[0] = false;
-				wait[1] = false;
-				throw new AssertionError(throwable);
-			}
-		});
+		assert response.isSuccessful();
+		assert response.code() == 200;
+		assert response.body() != null;
+		assert response.body().string().equals("true");
+	}
 
-		// I know it's bad style to wait for async requests in tests, but this seems to be the best way to test it in this case
-		while (wait[0])
-			Thread.sleep(500);
+	@Test
+	@Disabled
+	public void postNodeWithAuth()
+		throws IOException
+	{
+		String token = Credentials.basic(masterUsername, masterPassword);
 
-		assert wait[1];
+		AuthenticationInterceptor interceptor = new AuthenticationInterceptor(token);
+		OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+		httpClient.addInterceptor(interceptor);
+
+		prepareProvider(httpClient.build());
+
+		BuntataNode node = new BuntataNode(null, new Date(), new Date())
+			.setName("Node 1")
+			.setDescription("Some node description")
+			.setDatasourceId(1L);
+
+		Response<ResponseBody> response = provider.postNode(node).execute();
+
+		assert response.isSuccessful();
+		assert response.code() == 200;
+		assert response.body() != null;
+		assert response.body().string().equals("true");
 	}
 
 	@Test
 	public void checkDatasources()
-		throws InterruptedException
+		throws IOException
 	{
 		prepareProvider(null);
 
-		boolean[] wait = {true, true};
-		provider.getAllDatasources().enqueue(new Callback<List<BuntataDatasource>>()
-		{
-			@Override
-			public void onResponse(Call<List<BuntataDatasource>> call, Response<List<BuntataDatasource>> response)
-			{
-				try
-				{
-					wait[0] = false;
-					assert response.isSuccessful();
-					assert response.body() != null;
-					assert response.body().size() == 1;
-				}
-				catch (AssertionError e)
-				{
-					wait[1] = false;
-				}
-			}
+		Response<List<BuntataDatasource>> response = provider.getDatasources().execute();
 
-			@Override
-			public void onFailure(Call<List<BuntataDatasource>> call, Throwable throwable)
-			{
-				wait[0] = false;
-				wait[1] = false;
-				throw new AssertionError(throwable);
-			}
-		});
-
-		// I know it's bad style to wait for async requests in tests, but this seems to be the best way to test it in this case
-		while (wait[0])
-			Thread.sleep(500);
-
-		assert wait[1];
+		assert response.isSuccessful();
+		assert response.code() == 200;
+		assert response.body() != null;
+		assert response.body().size() == 1;
 	}
 }

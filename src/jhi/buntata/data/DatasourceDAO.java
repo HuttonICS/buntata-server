@@ -28,8 +28,14 @@ import jhi.database.shared.exception.*;
 /**
  * @author Sebastian Raubach
  */
-public class DatasourceDAO
+public class DatasourceDAO extends WriterDAO<BuntataDatasource>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataDatasource> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
 	public List<BuntataDatasource> getAll(boolean includeInvisible)
 	{
 		try
@@ -76,22 +82,6 @@ public class DatasourceDAO
 		catch (DatabaseException e)
 		{
 			e.printStackTrace();
-		}
-	}
-
-	public boolean add(BuntataDatasource datasource)
-	{
-		try
-		{
-			Database database = Database.connect();
-			Writer.Inst.get().write(datasource, Writer.Inst.get().getStatement(database));
-			database.close();
-			return true;
-		}
-		catch (DatabaseException e)
-		{
-			e.printStackTrace();
-			return false;
 		}
 	}
 

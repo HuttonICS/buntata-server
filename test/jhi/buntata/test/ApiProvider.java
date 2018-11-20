@@ -29,11 +29,29 @@ import retrofit2.http.*;
 public interface ApiProvider
 {
 	@GET("datasource")
-	Call<List<BuntataDatasource>> getAllDatasources();
+	Call<List<BuntataDatasource>> getDatasources();
+
+	@POST("datasource")
+	Call<ResponseBody> postDatasource(@Body BuntataDatasource datasource);
 
 	@PUT("datasource/{id}")
 	Call<ResponseBody> putDatasource(@Path("id") String id, @Body BuntataDatasource datasource);
 
+	@GET("node")
+	Call<ResponseBody> getNodes();
+
+	@POST("node")
+	Call<ResponseBody> postNode(@Body BuntataNode node);
+
 	@PUT("node/{id}")
 	Call<ResponseBody> putNode(@Path("id") String id, @Body BuntataNode node);
+
+	@GET("node/{id}/media")
+	Call<List<BuntataMedia>> getMediaForNode(@Path("id") String nodeId);
+
+	@POST("media")
+	Call<ResponseBody> postMedia(@Body BuntataMedia media);
+
+	@PUT("media/{id}")
+	Call<ResponseBody> putMedia(@Path("id") String id, @Body BuntataMedia media);
 }

@@ -51,7 +51,7 @@ public class Buntata extends Application
 	{
 		authorizer = new MethodAuthorizer();
 		authorizer.getAnonymousMethods().add(Method.GET);
-		authorizer.getAnonymousMethods().add(Method.POST);
+		authorizer.getAuthenticatedMethods().add(Method.POST);
 		authorizer.getAuthenticatedMethods().add(Method.PUT);
 		authorizer.getAuthenticatedMethods().add(Method.DELETE);
 
@@ -96,7 +96,7 @@ public class Buntata extends Application
 		return authenticator;
 	}
 
-	private static void attachToRouter(Router router, String url, Class<? extends ServerResource> clazz)
+	private void attachToRouter(Router router, String url, Class<? extends ServerResource> clazz)
 	{
 		router.attach(url, clazz);
 		router.attach(url + "/", clazz);
