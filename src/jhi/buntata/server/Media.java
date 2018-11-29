@@ -19,6 +19,7 @@ package jhi.buntata.server;
 import net.coobird.thumbnailator.*;
 
 import org.restlet.data.*;
+import org.restlet.data.Status;
 import org.restlet.representation.*;
 import org.restlet.resource.*;
 
@@ -37,6 +38,8 @@ import jhi.buntata.resource.*;
  */
 public class Media extends ServerResource
 {
+	private static String dataDir;
+
 	public static final String PARAM_SIZE = "small";
 
 	private final MediaDAO dao   = new MediaDAO();
@@ -65,8 +68,31 @@ public class Media extends ServerResource
 		}
 	}
 
+	@Delete("json")
+	public boolean deleteJson()
+	{
+		if (id == null)
+		{
+			throw new ResourceException(Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
+		}
+		else
+		{
+			BuntataMedia media = dao.get(id);
+
+			if (media != null)
+			{
+				dao.delete(media.getId());
+				return true;
+			}
+			else
+			{
+				throw new ResourceException(Status.CLIENT_ERROR_NOT_FOUND);
+			}
+		}
+	}
+
 	@Post("json")
-	public boolean postJson(BuntataMedia media)
+	public Long postJson(BuntataMedia media)
 	{
 		if (id != null)
 		{
@@ -79,7 +105,7 @@ public class Media extends ServerResource
 	}
 
 	@Put("json")
-	public boolean putJson(BuntataMedia media)
+	public Long putJson(BuntataMedia media)
 	{
 		if (id == null)
 		{
@@ -109,7 +135,7 @@ public class Media extends ServerResource
 
 		if (media != null)
 		{
-			File file = new File(media.getInternalLink());
+			File file = new File(dataDir, media.getInternalLink());
 
 			// Check if the image exists
 			if (file.exists() && file.isFile() && media.getMediaTypeId() == 1)
@@ -177,5 +203,10 @@ public class Media extends ServerResource
 		}
 
 		return representation;
+	}
+
+	public static void setDataDir(String dataDir)
+	{
+		Media.dataDir = dataDir;
 	}
 }

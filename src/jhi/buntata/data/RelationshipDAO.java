@@ -17,17 +17,43 @@
 package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
 import jhi.database.server.*;
 import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class RelationshipDAO
+public class RelationshipDAO extends WriterDAO<BuntataRelationship>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataRelationship> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
+	public BuntataRelationship getFor(Long child, Long parent)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataRelationship>("SELECT * FROM `relationships` WHERE child = ? AND parent = ?")
+				.setLong(child)
+				.setLong(parent)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public static class Writer extends DatabaseObjectWriter<BuntataRelationship>
 	{
 		public static final class Inst
@@ -76,7 +102,10 @@ public class RelationshipDAO
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -128,7 +157,7 @@ public class RelationshipDAO
 		public BuntataRelationship parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataRelationship(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+			return new BuntataRelationship(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setParent(rs.getLong(BuntataRelationship.FIELD_PARENT))
 				.setChild(rs.getLong(BuntataRelationship.FIELD_CHILD));
 		}

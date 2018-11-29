@@ -16,8 +16,16 @@
 
 package jhi.buntata.server;
 
+import org.apache.commons.fileupload.*;
+import org.apache.commons.fileupload.disk.*;
+import org.restlet.data.*;
+import org.restlet.data.Status;
+import org.restlet.ext.fileupload.*;
+import org.restlet.representation.*;
 import org.restlet.resource.*;
 
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 import jhi.buntata.data.*;
@@ -30,9 +38,12 @@ import jhi.buntata.resource.*;
  */
 public class NodeMedia extends ServerResource
 {
-	private final NodeDAO  nodeDAO  = new NodeDAO();
-	private final MediaDAO mediaDAO = new MediaDAO();
-	private       Long     id       = null;
+	private static String dataDir;
+
+	private final NodeDAO      nodeDAO      = new NodeDAO();
+	private final MediaDAO     mediaDAO     = new MediaDAO();
+	private final NodeMediaDAO nodeMediaDAO = new NodeMediaDAO();
+	private       Long         id           = null;
 
 	@Override
 	public void doInit()
@@ -46,6 +57,68 @@ public class NodeMedia extends ServerResource
 		catch (NullPointerException | NumberFormatException e)
 		{
 		}
+	}
+
+	@Put
+	public boolean putMedia(Representation entity)
+	{
+		if (entity != null && MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true))
+		{
+			try
+			{
+				BuntataNode node = nodeDAO.get(id);
+
+				DiskFileItemFactory factory = new DiskFileItemFactory();
+				RestletFileUpload upload = new RestletFileUpload(factory);
+				FileItemIterator fileIterator = upload.getItemIterator(entity);
+
+				if (fileIterator.hasNext())
+				{
+					String nodeName = node.getName().replace(" ", "-");
+					File dir = new File(dataDir, nodeName);
+					dir.mkdirs();
+
+					FileItemStream fi = fileIterator.next();
+
+					String name = fi.getName();
+
+					File file = new File(dir, name);
+
+					int i = 1;
+					while (file.exists())
+						file = new File(dir, (i++) + name);
+
+					// Copy the file to its target location
+					Files.copy(fi.openStream(), file.toPath());
+
+					// Create the media entity
+					String relativePath = new File(dataDir).toURI().relativize(file.toURI()).getPath();
+					BuntataMedia media = new BuntataMedia(null, new Date(), new Date())
+						.setInternalLink(relativePath)
+						.setName(name)
+						.setDescription(name)
+						.setMediaTypeId(1L);
+					mediaDAO.add(media);
+
+					// Create the node media entity
+					nodeMediaDAO.add(new BuntataNodeMedia()
+						.setMediaId(media.getId())
+						.setNodeId(node.getId()));
+
+					return true;
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			throw new ResourceException(Status.CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE);
+		}
+
+		return false;
 	}
 
 	@Get("json")
@@ -63,5 +136,10 @@ public class NodeMedia extends ServerResource
 			e.getValue().forEach(BuntataMedia::restrict);
 
 		return result;
+	}
+
+	public static void setDataDir(String dataDir)
+	{
+		NodeMedia.dataDir = dataDir;
 	}
 }

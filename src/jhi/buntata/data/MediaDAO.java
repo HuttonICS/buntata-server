@@ -24,6 +24,7 @@ import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
@@ -89,6 +90,22 @@ public class MediaDAO extends WriterDAO<BuntataMedia>
 		return result;
 	}
 
+	public boolean delete(Long id)
+	{
+		try
+		{
+			new ValueQuery("DELETE FROM media WHERE id = ?")
+				.setLong(id)
+				.execute();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	public static class Writer extends DatabaseObjectWriter<BuntataMedia>
 	{
 		public static final class Inst
@@ -142,7 +159,10 @@ public class MediaDAO extends WriterDAO<BuntataMedia>
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -199,7 +219,7 @@ public class MediaDAO extends WriterDAO<BuntataMedia>
 		public BuntataMedia parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataMedia(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+			return new BuntataMedia(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setMediaTypeId(rs.getLong(BuntataMedia.FIELD_MEDIATYPE_ID))
 				.setName(rs.getString(BuntataMedia.FIELD_NAME))
 				.setDescription(rs.getString(BuntataMedia.FIELD_DESCRIPTION))

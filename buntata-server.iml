@@ -29,8 +29,11 @@
           <root url="file://$MODULE_DIR$/lib/lib-devel" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/lib/lib-devel" />
+        </SOURCES>
         <jarDirectory url="file://$MODULE_DIR$/lib/lib-devel" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/lib/lib-devel" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
     <orderEntry type="module-library">

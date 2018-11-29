@@ -17,30 +17,81 @@
 package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
 import jhi.database.server.*;
 import jhi.database.server.parser.*;
+import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class SimilarityDAO
+public class SimilarityDAO extends WriterDAO<BuntataSimilarity>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataSimilarity> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
+	public BuntataSimilarity getFor(Long nodeAId, Long nodeBId)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataSimilarity>("SELECT * FROM similarities WHERE node_a_id = ? AND node_b_id = ?")
+				.setLong(nodeAId)
+				.setLong(nodeBId)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public boolean delete(Long id)
+	{
+		try
+		{
+			new ValueQuery("DELETE FROM `similarities` WHERE id = ?")
+				.setLong(id)
+				.execute();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public BuntataSimilarity get(Long id)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataSimilarity>("SELECT * FROM `similarities` WHERE id = ?")
+				.setLong(id)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
 	public static class Writer extends DatabaseObjectWriter<BuntataSimilarity>
 	{
 		public static final class Inst
 		{
-			/**
-			 * {@link InstanceHolder} is loaded on the first execution of {@link Inst#get()} or the first access to {@link InstanceHolder#INSTANCE},
-			 * not before.
-			 * <p/>
-			 * This solution (<a href= "http://en.wikipedia.org/wiki/Initialization_on_demand_holder_idiom" >Initialization-on-demand holder
-			 * idiom</a>) is thread-safe without requiring special language constructs (i.e. <code>volatile</code> or <code>synchronized</code>).
-			 *
-			 * @author Sebastian Raubach
-			 */
 			private static final class InstanceHolder
 			{
 				private static final Writer INSTANCE = new Writer();
@@ -76,7 +127,10 @@ public class SimilarityDAO
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -104,15 +158,6 @@ public class SimilarityDAO
 	{
 		public static final class Inst
 		{
-			/**
-			 * {@link InstanceHolder} is loaded on the first execution of {@link Inst#get()} or the first access to {@link InstanceHolder#INSTANCE},
-			 * not before.
-			 * <p/>
-			 * This solution (<a href= "http://en.wikipedia.org/wiki/Initialization_on_demand_holder_idiom" >Initialization-on-demand holder
-			 * idiom</a>) is thread-safe without requiring special language constructs (i.e. <code>volatile</code> or <code>synchronized</code>).
-			 *
-			 * @author Sebastian Raubach
-			 */
 			private static final class InstanceHolder
 			{
 				private static final Parser INSTANCE = new Parser();
@@ -128,7 +173,7 @@ public class SimilarityDAO
 		public BuntataSimilarity parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataSimilarity(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+			return new BuntataSimilarity(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setNodeAId(rs.getLong(BuntataSimilarity.FIELD_NODE_A_ID))
 				.setNodeBId(rs.getLong(BuntataSimilarity.FIELD_NODE_B_ID));
 		}

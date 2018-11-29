@@ -16,27 +16,107 @@
 
 package jhi.buntata.server.auth;
 
+import org.restlet.*;
+import org.restlet.data.*;
 import org.restlet.security.*;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class CustomVerifier extends SecretVerifier
+public class CustomVerifier implements Verifier
 {
+	public static final long AGE = 1800000;
+
 	private static String masterUsername;
 	private static String masterPassword;
 
-	@Override
-	public int verify(String s, char[] chars)
+	private static Map<String, Long> tokenToTimestamp = new ConcurrentHashMap<>();
+
+	public CustomVerifier()
 	{
-		boolean canAccess = true;
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				tokenToTimestamp.entrySet().removeIf(token -> token.getValue() < (System.currentTimeMillis() - AGE));
+			}
+		}, 0, AGE);
+	}
 
-		if (masterUsername == null || masterPassword == null || "".equals(masterUsername) || "".equals(masterPassword))
-			canAccess = false;
-		else if (!masterUsername.equals(s) || !masterPassword.equals(new String(chars)))
-			canAccess = false;
+	public static boolean removeToken(String password)
+	{
+		return tokenToTimestamp.remove(password) != null;
+	}
 
-		return canAccess ? RESULT_VALID : RESULT_INVALID;
+	@Override
+	public int verify(Request request, Response response)
+	{
+		ChallengeResponse cr = request.getChallengeResponse();
+		if (cr != null)
+		{
+			String token = cr.getRawValue();
+
+			boolean canAccess = false;
+
+			// Check if it's the master username and password
+			Long timestamp = tokenToTimestamp.get(token);
+
+			if (timestamp != null)
+			{
+				// First, check the bearer token and see if we have it in the cache
+				if ((System.currentTimeMillis() - AGE) < timestamp)
+				{
+					// If we do, validate it against the cookie
+					List<Cookie> cookies = request.getCookies()
+												  .stream()
+												  .filter(c -> c.getName().equals("token"))
+												  .collect(Collectors.toList());
+
+					if (cookies.size() > 0)
+					{
+						canAccess = Objects.equals(token, cookies.get(0).getValue());
+						// Extend the cookie
+						tokenToTimestamp.put(token, System.currentTimeMillis());
+						setCookie(response, token);
+					}
+					else
+					{
+						canAccess = false;
+					}
+				}
+				else
+				{
+					return RESULT_STALE;
+				}
+			}
+
+			return canAccess ? RESULT_VALID : RESULT_INVALID;
+		}
+		else
+		{
+			return RESULT_MISSING;
+		}
+	}
+
+	public static void addToken(Response response, String token)
+	{
+		setCookie(response, token);
+		tokenToTimestamp.put(token, System.currentTimeMillis());
+	}
+
+	private static void setCookie(Response response, String token)
+	{
+		CookieSetting cookie = new CookieSetting(0, "token", token);
+		cookie.setAccessRestricted(true);
+		cookie.setMaxAge((int) (AGE / 1000));
+		cookie.setPath("/");
+		response.getCookieSettings().add(cookie);
 	}
 
 	public static void setMasterUsername(String masterUsername)
@@ -47,5 +127,15 @@ public class CustomVerifier extends SecretVerifier
 	public static void setMasterPassword(String masterPassword)
 	{
 		CustomVerifier.masterPassword = masterPassword;
+	}
+
+	public static String getMasterUsername()
+	{
+		return masterUsername;
+	}
+
+	public static String getMasterPassword()
+	{
+		return masterPassword;
 	}
 }

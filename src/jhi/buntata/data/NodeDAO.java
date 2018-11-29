@@ -24,6 +24,7 @@ import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
@@ -154,6 +155,40 @@ public class NodeDAO extends WriterDAO<BuntataNode>
 		return new ArrayList<>();
 	}
 
+	public void update(BuntataNode node)
+	{
+		try
+		{
+			new ValueQuery("UPDATE `nodes` SET name = ?, description = ? WHERE id = ?")
+				.setString(node.getName())
+				.setString(node.getDescription())
+				.setLong(node.getId())
+				.execute();
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	public List<BuntataNode> getAllForSearch(Long datasourceId, String searchTerm)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataNode>("SELECT * FROM nodes WHERE datasource_id = ? AND name LIKE ?")
+				.setLong(datasourceId)
+				.setString("%" + searchTerm + "%")
+				.run()
+				.getObjects(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return new ArrayList<>();
+	}
+
 	public static class Writer extends DatabaseObjectWriter<BuntataNode>
 	{
 		public static final class Inst
@@ -203,7 +238,10 @@ public class NodeDAO extends WriterDAO<BuntataNode>
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -259,14 +297,14 @@ public class NodeDAO extends WriterDAO<BuntataNode>
 		public BuntataNode parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			BuntataNode node = new BuntataNode(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+			BuntataNode node = new BuntataNode(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setDatasourceId(rs.getLong(BuntataNode.FIELD_DATASOURCE_ID))
 				.setName(rs.getString(BuntataNode.FIELD_NAME))
 				.setDescription(rs.getString(BuntataNode.FIELD_DESCRIPTION));
 
 			if (includeForeign)
 				node.setMedia(mediaDao.getAllForNode(rs.getLong(BuntataNode.ID), false))
-					.setAttributeValues(attributeValueDao.getAllForNode(rs.getInt(BuntataNode.ID)));
+					.setAttributeValues(attributeValueDao.getAllForNode(rs.getLong(BuntataNode.ID)));
 
 			return node;
 		}

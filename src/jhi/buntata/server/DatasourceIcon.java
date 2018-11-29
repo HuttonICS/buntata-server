@@ -16,11 +16,17 @@
 
 package jhi.buntata.server;
 
+
+import org.apache.commons.fileupload.*;
+import org.apache.commons.fileupload.disk.*;
 import org.restlet.data.*;
+import org.restlet.data.Status;
+import org.restlet.ext.fileupload.*;
 import org.restlet.representation.*;
 import org.restlet.resource.*;
 
 import java.io.*;
+import java.nio.file.*;
 
 import jhi.buntata.data.*;
 import jhi.buntata.resource.*;
@@ -32,6 +38,8 @@ import jhi.buntata.resource.*;
  */
 public class DatasourceIcon extends ServerResource
 {
+	private static String dataDir;
+
 	private final DatasourceDAO dao = new DatasourceDAO();
 	private       Long          id  = null;
 
@@ -49,6 +57,47 @@ public class DatasourceIcon extends ServerResource
 		}
 	}
 
+	@Put
+	public void putImage(Representation entity)
+	{
+		if (entity != null && MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true))
+		{
+			try
+			{
+				DiskFileItemFactory factory = new DiskFileItemFactory();
+				RestletFileUpload upload = new RestletFileUpload(factory);
+				FileItemIterator fileIterator = upload.getItemIterator(entity);
+
+				if (fileIterator.hasNext())
+				{
+					FileItemStream fi = fileIterator.next();
+
+					String name = fi.getName();
+
+					File file = new File(dataDir, name);
+
+					int i = 1;
+					while (file.exists())
+						file = new File(dataDir, (i++) + name);
+
+					Files.copy(fi.openStream(), file.toPath());
+
+					BuntataDatasource ds = dao.get(id);
+					ds.setIcon(file.getName());
+					dao.updateIcon(ds);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			throw new ResourceException(Status.CLIENT_ERROR_UNSUPPORTED_MEDIA_TYPE);
+		}
+	}
+
 	@Get
 	public FileRepresentation getImage()
 	{
@@ -63,7 +112,7 @@ public class DatasourceIcon extends ServerResource
 
 			if (icon != null)
 			{
-				File file = new File(icon);
+				File file = new File(dataDir, icon);
 
 				// Check if the icon exists
 				if (file.exists() && file.isFile())
@@ -81,5 +130,10 @@ public class DatasourceIcon extends ServerResource
 
 		// Return the result
 		return representation;
+	}
+
+	public static void setDataDir(String dataDir)
+	{
+		DatasourceIcon.dataDir = dataDir;
 	}
 }

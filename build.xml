@@ -104,6 +104,7 @@
 				<filter token="master.username" value="${master.username}"/>
 				<filter token="master.password" value="${master.password}"/>
 				<filter token="database.url" value="${database.url}"/>
+				<filter token="data.dir" value="${data.dir}"/>
 				<filter token="api.version" value="${api.version}"/>
 				<filter token="ga.tracking.id" value="${ga.tracking.id}"/>
 			</filterset>
@@ -115,6 +116,7 @@
 			<lib file="${jar}"/>
 
 			<zipfileset dir="res" includes="*.*" prefix="WEB-INF"/>
+			<zipfileset dir="." includes="logging.properties" prefix="WEB-INF/classes"/>
 
 			<metainf file="web/context.xml"/>
 		</war>

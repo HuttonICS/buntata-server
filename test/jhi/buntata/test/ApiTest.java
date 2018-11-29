@@ -33,7 +33,10 @@ import retrofit2.converter.jackson.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ApiTest extends DatabaseTest
 {
-	private ApiProvider provider;
+	private ApiProvider               provider;
+	private String                    bearerToken;
+	private OkHttpClient              client;
+	private AuthenticationInterceptor interceptor;
 
 	public void prepareProvider(OkHttpClient client)
 	{
@@ -49,10 +52,45 @@ public class ApiTest extends DatabaseTest
 			.create(ApiProvider.class);
 	}
 
+	private void prepareClient(boolean auth)
+	{
+		if (auth)
+		{
+			interceptor.setAuthToken("Bearer", bearerToken);
+		}
+		else
+		{
+			interceptor.setAuthToken(null, null);
+		}
+	}
+
+	@BeforeAll
+	public void getToken()
+		throws IOException
+	{
+		String basicToken = Credentials.basic(masterUsername, masterPassword);
+
+		interceptor = new AuthenticationInterceptor(basicToken);
+		OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+		httpClient.addInterceptor(interceptor);
+
+		client = httpClient.build();
+		prepareProvider(client);
+
+		Response<BuntataToken> response = provider.token(new BuntataUser()
+			.setUsername(masterUsername)
+			.setPassword(masterPassword))
+												  .execute();
+
+		assert response.body() != null;
+		this.bearerToken = response.body().getToken();
+	}
+
 	@Test
 	public void putDatasourceWithoutAuth()
 		throws IOException
 	{
+		prepareClient(false);
 		prepareProvider(null);
 
 		BuntataDatasource datasource = new BuntataDatasource(1L, new Date(), new Date())
@@ -74,13 +112,8 @@ public class ApiTest extends DatabaseTest
 	public void putDatasourceWithAuth()
 		throws IOException
 	{
-		String token = Credentials.basic(masterUsername, masterPassword);
-
-		AuthenticationInterceptor interceptor = new AuthenticationInterceptor(token);
-		OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-		httpClient.addInterceptor(interceptor);
-
-		prepareProvider(httpClient.build());
+		prepareClient(true);
+		prepareProvider(client);
 
 		BuntataDatasource datasource = new BuntataDatasource(1L, new Date(), new Date())
 			.setName("Datasource 1")
@@ -95,20 +128,15 @@ public class ApiTest extends DatabaseTest
 		assert response.isSuccessful();
 		assert response.code() == 200;
 		assert response.body() != null;
-		assert response.body().string().equals("true");
+		assert isLong(response.body().string());
 	}
 
 	@Test
 	public void putNodeWithAuth()
 		throws IOException
 	{
-		String token = Credentials.basic(masterUsername, masterPassword);
-
-		AuthenticationInterceptor interceptor = new AuthenticationInterceptor(token);
-		OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-		httpClient.addInterceptor(interceptor);
-
-		prepareProvider(httpClient.build());
+		prepareClient(true);
+		prepareProvider(client);
 
 		BuntataNode node = new BuntataNode(1L, new Date(), new Date())
 			.setName("Node 1")
@@ -120,7 +148,7 @@ public class ApiTest extends DatabaseTest
 		assert response.isSuccessful();
 		assert response.code() == 200;
 		assert response.body() != null;
-		assert response.body().string().equals("true");
+		assert isLong(response.body().string());
 	}
 
 	@Test
@@ -128,13 +156,8 @@ public class ApiTest extends DatabaseTest
 	public void postNodeWithAuth()
 		throws IOException
 	{
-		String token = Credentials.basic(masterUsername, masterPassword);
-
-		AuthenticationInterceptor interceptor = new AuthenticationInterceptor(token);
-		OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-		httpClient.addInterceptor(interceptor);
-
-		prepareProvider(httpClient.build());
+		prepareClient(true);
+		prepareProvider(client);
 
 		BuntataNode node = new BuntataNode(null, new Date(), new Date())
 			.setName("Node 1")
@@ -146,13 +169,14 @@ public class ApiTest extends DatabaseTest
 		assert response.isSuccessful();
 		assert response.code() == 200;
 		assert response.body() != null;
-		assert response.body().string().equals("true");
+		assert isLong(response.body().string());
 	}
 
 	@Test
 	public void checkDatasources()
 		throws IOException
 	{
+		prepareClient(false);
 		prepareProvider(null);
 
 		Response<List<BuntataDatasource>> response = provider.getDatasources().execute();
@@ -161,5 +185,18 @@ public class ApiTest extends DatabaseTest
 		assert response.code() == 200;
 		assert response.body() != null;
 		assert response.body().size() == 1;
+	}
+
+	private boolean isLong(String value)
+	{
+		try
+		{
+			Long.parseLong(value);
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
 	}
 }

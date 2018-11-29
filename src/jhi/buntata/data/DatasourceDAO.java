@@ -24,6 +24,7 @@ import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
@@ -34,6 +35,22 @@ public class DatasourceDAO extends WriterDAO<BuntataDatasource>
 	protected DatabaseObjectWriter<BuntataDatasource> getWriter()
 	{
 		return Writer.Inst.get();
+	}
+
+	public boolean delete(Long id)
+	{
+		try
+		{
+			new ValueQuery("DELETE FROM datasources WHERE id = ?")
+				.setLong(id)
+				.execute();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	public List<BuntataDatasource> getAll(boolean includeInvisible)
@@ -67,6 +84,21 @@ public class DatasourceDAO extends WriterDAO<BuntataDatasource>
 		}
 
 		return null;
+	}
+
+	public void updateIcon(BuntataDatasource datasource)
+	{
+		try
+		{
+			new ValueQuery("UPDATE datasources SET icon = ? WHERE id = ?")
+				.setString(datasource.getIcon())
+				.setLong(datasource.getId())
+				.execute();
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	public void updateSize(BuntataDatasource datasource)
@@ -113,7 +145,7 @@ public class DatasourceDAO extends WriterDAO<BuntataDatasource>
 		public BuntataDatasource parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataDatasource(rs.getLong(BuntataDatasource.ID), rs.getTimestamp(BuntataDatasource.CREATED_ON), rs.getTimestamp(BuntataDatasource.UPDATED_ON))
+			return new BuntataDatasource(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setName(rs.getString(BuntataDatasource.FIELD_NAME))
 				.setDescription(rs.getString(BuntataDatasource.FIELD_DESCRIPTION))
 				.setVisibility(rs.getBoolean(BuntataDatasource.FIELD_VISIBILITY))
@@ -184,7 +216,10 @@ public class DatasourceDAO extends WriterDAO<BuntataDatasource>
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override

@@ -17,17 +17,19 @@
 package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
 import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class AttributeDAO
+public class AttributeDAO extends WriterDAO<BuntataAttribute>
 {
 	public BuntataAttribute get(Long id)
 	{
@@ -44,6 +46,29 @@ public class AttributeDAO
 		}
 
 		return null;
+	}
+
+	public BuntataAttribute getByName(String name)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataAttribute>("SELECT * FROM attributes WHERE name = ?")
+				.setString(name)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	@Override
+	protected DatabaseObjectWriter<BuntataAttribute> getWriter()
+	{
+		return Writer.Inst.get();
 	}
 
 	public static class Writer extends DatabaseObjectWriter<BuntataAttribute>
@@ -93,7 +118,10 @@ public class AttributeDAO
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -144,7 +172,7 @@ public class AttributeDAO
 		public BuntataAttribute parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataAttribute(rs.getLong(BuntataDatasource.ID), rs.getTimestamp(BuntataDatasource.CREATED_ON), rs.getTimestamp(BuntataDatasource.UPDATED_ON))
+			return new BuntataAttribute(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setName(rs.getString(BuntataAttribute.FIELD_NAME));
 		}
 	}

@@ -17,17 +17,25 @@
 package jhi.buntata.data;
 
 import java.sql.*;
+import java.util.*;
 
 import jhi.buntata.resource.*;
 import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class NodeMediaDAO
+public class NodeMediaDAO extends WriterDAO<BuntataNodeMedia>
 {
+	@Override
+	protected DatabaseObjectWriter<BuntataNodeMedia> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
 	public static class Writer extends DatabaseObjectWriter<BuntataNodeMedia>
 	{
 		public static final class Inst
@@ -76,7 +84,10 @@ public class NodeMediaDAO
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -128,7 +139,7 @@ public class NodeMediaDAO
 		public BuntataNodeMedia parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			return new BuntataNodeMedia(rs.getLong(BuntataMedia.ID), rs.getTimestamp(BuntataMedia.CREATED_ON), rs.getTimestamp(BuntataMedia.UPDATED_ON))
+			return new BuntataNodeMedia(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setNodeId(rs.getLong(BuntataNodeMedia.FIELD_NODE_ID))
 				.setMediaId(rs.getLong(BuntataNodeMedia.FIELD_MEDIA_ID));
 		}

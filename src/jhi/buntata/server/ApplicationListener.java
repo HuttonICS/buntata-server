@@ -42,9 +42,13 @@ public class ApplicationListener implements ServletContextListener
 		String password = sce.getServletContext().getInitParameter("password");
 		String masterUsername = sce.getServletContext().getInitParameter("masterUsername");
 		String masterPassword = sce.getServletContext().getInitParameter("masterPassword");
+		String dataDir = sce.getServletContext().getInitParameter("dataDir");
 
 		CustomVerifier.setMasterUsername(masterUsername);
 		CustomVerifier.setMasterPassword(masterPassword);
+		DatasourceIcon.setDataDir(dataDir);
+		Media.setDataDir(dataDir);
+		NodeMedia.setDataDir(dataDir);
 
 		database = database.replace(Database.DatabaseType.MYSQL.getConnectionString(), "");
 

@@ -23,6 +23,7 @@ import org.restlet.resource.*;
 import org.restlet.routing.*;
 import org.restlet.security.*;
 import org.restlet.service.*;
+import org.restlet.util.*;
 
 import java.util.*;
 
@@ -35,8 +36,9 @@ import jhi.buntata.server.auth.*;
  */
 public class Buntata extends Application
 {
-	private ChallengeAuthenticator authenticator;
-	private MethodAuthorizer       authorizer;
+	private        ChallengeAuthenticator authenticator;
+	private        MethodAuthorizer       authorizer;
+	private static CustomVerifier         verifier = new CustomVerifier();
 
 	public Buntata()
 	{
@@ -51,11 +53,12 @@ public class Buntata extends Application
 	{
 		authorizer = new MethodAuthorizer();
 		authorizer.getAnonymousMethods().add(Method.GET);
+		authorizer.getAuthenticatedMethods().add(Method.OPTIONS);
 		authorizer.getAuthenticatedMethods().add(Method.POST);
 		authorizer.getAuthenticatedMethods().add(Method.PUT);
 		authorizer.getAuthenticatedMethods().add(Method.DELETE);
 
-		authenticator = new ChallengeAuthenticator(context, true, ChallengeScheme.HTTP_BASIC, "Buntata", new CustomVerifier());
+		authenticator = new ChallengeAuthenticator(context, true, ChallengeScheme.HTTP_OAUTH_BEARER, "Buntata", verifier);
 	}
 
 	@Override
@@ -63,42 +66,81 @@ public class Buntata extends Application
 	{
 		Context context = getContext();
 
-		// Create new router
-		Router router = new Router(context);
-
 		setUpAuthentication(context);
 
 		// Set the encoder
 		Filter encoder = new Encoder(context, false, true, new EncoderService(true));
-		encoder.setNext(router);
-		// Set the Cors filter
-		CorsFilter corsFilter = new CorsFilter(context, encoder);
-		corsFilter.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
-		corsFilter.setAllowedCredentials(true);
-		corsFilter.setSkippingResourceForCorsOptions(false);
 
+		// Set the Cors filter
+		CorsFilter corsFilter = new CorsFilter(context, encoder)
+		{
+			@Override
+			protected int beforeHandle(Request request, Response response)
+			{
+				if (getCorsResponseHelper().isCorsRequest(request))
+				{
+					Series<Header> headers = request.getHeaders();
+
+					for (Header header : headers)
+					{
+						if (header.getName().equalsIgnoreCase("origin"))
+						{
+							response.setAccessControlAllowOrigin(header.getValue());
+						}
+					}
+				}
+				return super.beforeHandle(request, response);
+			}
+		};
+		corsFilter.setAllowedOrigins(new HashSet<>(Collections.singletonList("*")));
+		corsFilter.setSkippingResourceForCorsOptions(true);
+		corsFilter.setAllowingAllRequestedHeaders(true);
+		corsFilter.setDefaultAllowedMethods(new HashSet<>(Arrays.asList(Method.POST, Method.GET, Method.PUT, Method.DELETE, Method.OPTIONS)));
+		corsFilter.setAllowedCredentials(true);
+
+		// Create new router
+		Router routerAuth = new Router(context);
+		Router routerUnauth = new Router(context);
 		// Attach the url handlers
-		attachToRouter(router, "/datasource", Datasource.class);
-		attachToRouter(router, "/datasource/{id}", Datasource.class);
-		attachToRouter(router, "/datasource/{id}/icon", DatasourceIcon.class);
-		attachToRouter(router, "/datasource/{id}/download", DatasourceDownload.class);
+		attachToRouter(routerAuth, "/datasource", Datasource.class);
+		attachToRouter(routerAuth, "/datasource/{id}", Datasource.class);
+		attachToRouter(routerAuth, "/datasource/{id}/icon", DatasourceIcon.class);
+		attachToRouter(routerAuth, "/datasource/{id}/download", DatasourceDownload.class);
 
 		// Not currently used by the Buntata app
-		attachToRouter(router, "/datasource/{id}/nodes", DatasourceNodeList.class);
-		attachToRouter(router, "/media/{id}", Media.class);
-		attachToRouter(router, "/node", Node.class);
-		attachToRouter(router, "/node/{id}", Node.class);
-		attachToRouter(router, "/node/{id}/media", NodeMedia.class);
+		attachToRouter(routerAuth, "/datasource/{id}/nodes", DatasourceNodeList.class);
+		attachToRouter(routerAuth, "/media/{id}", Media.class);
+		attachToRouter(routerAuth, "/node", Node.class);
+		attachToRouter(routerAuth, "/node/{id}", Node.class);
+		attachToRouter(routerAuth, "/node/{id}/media", NodeMedia.class);
+		attachToRouter(routerAuth, "/relationship", Relationship.class);
+		attachToRouter(routerAuth, "/similarity", Similarity.class);
+		attachToRouter(routerAuth, "/attributevalue", AttributeValue.class);
+		attachToRouter(routerAuth, "/attributevalue/{id}", AttributeValue.class);
 
+		attachToRouter(routerUnauth, "/token", Token.class);
+
+		// CORS first, then encoder
+		corsFilter.setNext(encoder);
+		// After that the unauthorized paths
+		encoder.setNext(routerUnauth);
+		// Set everything that isn't covered to go through the authenticator
+		routerUnauth.attachDefault(authenticator);
 		authenticator.setNext(authorizer);
-		authorizer.setNext(corsFilter);
+		// And finally it ends up at the authenticated router
+		authorizer.setNext(routerAuth);
 
-		return authenticator;
+		return corsFilter;
 	}
 
 	private void attachToRouter(Router router, String url, Class<? extends ServerResource> clazz)
 	{
 		router.attach(url, clazz);
 		router.attach(url + "/", clazz);
+	}
+
+	public static CustomVerifier getVerifier()
+	{
+		return verifier;
 	}
 }

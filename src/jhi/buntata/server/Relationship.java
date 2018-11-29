@@ -14,33 +14,34 @@
  * limitations under the License.
  */
 
-package jhi.buntata.data;
+package jhi.buntata.server;
 
-import jhi.database.server.*;
-import jhi.database.shared.exception.*;
-import jhi.database.shared.util.*;
+import org.restlet.data.Status;
+import org.restlet.resource.*;
+
+import jhi.buntata.data.*;
+import jhi.buntata.resource.*;
 
 /**
+ * {@link ServerResource} handling {@link Relationship} requests.
+ *
  * @author Sebastian Raubach
  */
-public abstract class WriterDAO<T extends DatabaseObject>
+public class Relationship extends ServerResource
 {
-	public Long add(T object)
+	private final RelationshipDAO dao = new RelationshipDAO();
+
+	@Post("json")
+	public Long postJson(BuntataRelationship relationship)
 	{
-		try
+		BuntataRelationship r = dao.getFor(relationship.getChild(), relationship.getParent());
+		if (r != null)
 		{
-			Database database = Database.connect();
-			DatabaseObjectWriter<T> writer = getWriter();
-			writer.write(object, writer.getStatement(database));
-			database.close();
-			return object.getId();
+			throw new ResourceException(Status.CLIENT_ERROR_CONFLICT);
 		}
-		catch (DatabaseException e)
+		else
 		{
-			e.printStackTrace();
-			return null;
+			return dao.add(relationship);
 		}
 	}
-
-	protected abstract DatabaseObjectWriter<T> getWriter();
 }

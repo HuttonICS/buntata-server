@@ -54,4 +54,7 @@ public interface ApiProvider
 
 	@PUT("media/{id}")
 	Call<ResponseBody> putMedia(@Path("id") String id, @Body BuntataMedia media);
+
+	@POST("token")
+	Call<BuntataToken> token(@Body BuntataUser credentials);
 }

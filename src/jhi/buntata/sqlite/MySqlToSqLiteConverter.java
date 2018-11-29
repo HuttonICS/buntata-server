@@ -44,7 +44,7 @@ public class MySqlToSqLiteConverter
 	{
 		int i = 0;
 
-		new MySqlToSqLiteConverter(Integer.parseInt(args[i++]), Boolean.parseBoolean(args[i++]), new File(args[i++]), new File(args[i++]), args[i++], args[i++], args[i++]);
+		new MySqlToSqLiteConverter(Long.parseLong(args[i++]), Boolean.parseBoolean(args[i++]), new File(args[i++]), new File(args[i++]), args[i++], args[i++], args[i++]);
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class MySqlToSqLiteConverter
 	 * @throws IOException  Thrown if any file i/o operation fails
 	 * @throws SQLException Thrown if any database interaction fails
 	 */
-	private MySqlToSqLiteConverter(int id, boolean includeVideos, File source, File target, String database, String username, String password)
+	private MySqlToSqLiteConverter(long id, boolean includeVideos, File source, File target, String database, String username, String password)
 		throws IOException
 	{
 		this.target = target;
@@ -420,7 +420,7 @@ public class MySqlToSqLiteConverter
 	 * @param id The {@link BuntataDatasource} id
 	 * @return The ids of the copied {@link BuntataNode}s
 	 */
-	private List<Long> copyNodes(int id)
+	private List<Long> copyNodes(long id)
 	{
 		List<Long> ids = new ArrayList<>();
 
@@ -457,7 +457,7 @@ public class MySqlToSqLiteConverter
 	 *
 	 * @param id The {@link BuntataDatasource} id
 	 */
-	private void copyDataSources(int id)
+	private void copyDataSources(long id)
 	{
 		try
 		{

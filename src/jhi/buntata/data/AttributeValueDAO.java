@@ -24,20 +24,21 @@ import jhi.database.server.*;
 import jhi.database.server.parser.*;
 import jhi.database.server.query.*;
 import jhi.database.shared.exception.*;
+import jhi.database.shared.util.*;
 
 /**
  * @author Sebastian Raubach
  */
-public class AttributeValueDAO
+public class AttributeValueDAO extends WriterDAO<BuntataAttributeValue>
 {
-	public List<BuntataAttributeValue> getAllForNode(int id)
+	public List<BuntataAttributeValue> getAllForNode(long id)
 	{
 		try
 		{
 			return new DatabaseObjectQuery<BuntataAttributeValue>("SELECT * FROM attributevalues WHERE node_id = ?")
 				.setLong(id)
 				.run()
-				.getObjects(Parser.Inst.get());
+				.getObjects(Parser.Inst.get(), true);
 		}
 		catch (DatabaseException e)
 		{
@@ -45,6 +46,79 @@ public class AttributeValueDAO
 		}
 
 		return new ArrayList<>();
+	}
+
+	@Override
+	protected DatabaseObjectWriter<BuntataAttributeValue> getWriter()
+	{
+		return Writer.Inst.get();
+	}
+
+	public BuntataAttributeValue getFor(Long nodeId, Long attributeId)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataAttributeValue>("SELECT * FROM attributevalues WHERE node_id = ? AND attribute_id = ?")
+				.setLong(nodeId)
+				.setLong(attributeId)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public BuntataAttributeValue get(Long id)
+	{
+		try
+		{
+			return new DatabaseObjectQuery<BuntataAttributeValue>("SELECT * FROM attributevalues WHERE id = ?")
+				.setLong(id)
+				.run()
+				.getObject(Parser.Inst.get());
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public boolean delete(Long id)
+	{
+		try
+		{
+			new ValueQuery("DELETE FROM attributevalues WHERE id = ?")
+				.setLong(id)
+				.execute();
+			return true;
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void update(BuntataAttributeValue av)
+	{
+		try
+		{
+			new ValueQuery("UPDATE `attributevalues` SET value = ? WHERE node_id = ? AND attribute_id = ?")
+				.setString(av.getValue())
+				.setLong(av.getNodeId())
+				.setLong(av.getAttributeId())
+				.execute();
+		}
+		catch (DatabaseException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	public static class Writer extends DatabaseObjectWriter<BuntataAttributeValue>
@@ -96,7 +170,10 @@ public class AttributeValueDAO
 			else
 				stmt.setNull(i++, Types.TIMESTAMP);
 
-			stmt.execute();
+			List<Long> ids = stmt.execute();
+
+			if (ids.size() > 0)
+				object.setId(ids.get(0));
 		}
 
 		@Override
@@ -151,7 +228,7 @@ public class AttributeValueDAO
 		public BuntataAttributeValue parse(DatabaseResult rs, boolean includeForeign)
 			throws DatabaseException
 		{
-			BuntataAttributeValue value = new BuntataAttributeValue(rs.getLong(BuntataDatasource.ID), rs.getTimestamp(BuntataDatasource.CREATED_ON), rs.getTimestamp(BuntataDatasource.UPDATED_ON))
+			BuntataAttributeValue value = new BuntataAttributeValue(rs.getLong(DatabaseObject.ID), rs.getTimestamp(DatabaseObject.CREATED_ON), rs.getTimestamp(DatabaseObject.UPDATED_ON))
 				.setNodeId(rs.getLong(BuntataAttributeValue.FIELD_NODE_ID))
 				.setAttributeId(rs.getLong(BuntataAttributeValue.FIELD_ATTRIBUTE_ID))
 				.setValue(rs.getString(BuntataAttributeValue.FIELD_VALUE));

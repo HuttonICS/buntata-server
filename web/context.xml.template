@@ -27,6 +27,7 @@
     <Parameter name="password" value="@database.password@" override="true" />
 <Parameter name="masterUsername" value="@master.username@" override="true" />
 <Parameter name="masterPassword" value="@master.password@" override="true" />
+<Parameter name="dataDir" value="@data.dir@" override="true" />
     <Parameter name="version"  value="@api.version@" override="true" />
 <Parameter name="gatrackingid" value="@ga.tracking.id@" override="true" />
 </Context>

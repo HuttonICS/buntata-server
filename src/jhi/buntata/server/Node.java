@@ -16,6 +16,7 @@
 
 package jhi.buntata.server;
 
+import org.restlet.data.Status;
 import org.restlet.resource.*;
 
 import java.util.*;
@@ -32,10 +33,13 @@ public class Node extends ServerResource
 {
 	public static final String PARAM_DATASOURCE_ID  = "datasourceId";
 	public static final String PARAM_NODE_PARENT_ID = "nodeParentId";
+	public static final String PARAM_SEARCH_TERM    = "searchTerm";
 
 	private final NodeDAO dao          = new NodeDAO();
 	private       Long    id           = null;
+	private       Long    datasourceId = null;
 	private       Long    nodeParentId = null;
+	private       String  searchTerm   = null;
 
 	@Override
 	public void doInit()
@@ -57,27 +61,33 @@ public class Node extends ServerResource
 		catch (NullPointerException | NumberFormatException e)
 		{
 		}
+
+		try
+		{
+			datasourceId = Long.parseLong(getQueryValue(PARAM_DATASOURCE_ID));
+		}
+		catch (NullPointerException | NumberFormatException e)
+		{
+		}
+
+		searchTerm = getQueryValue(PARAM_SEARCH_TERM);
 	}
 
 	@Post("json")
-	public boolean postJson(BuntataNode node)
+	public Long postJson(BuntataNode node)
 	{
 		if (id != null)
-		{
-			throw new ResourceException(400);
-		}
+			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST);
 		else
-		{
 			return dao.add(node);
-		}
 	}
 
 	@Put("json")
-	public boolean putJson(BuntataNode node)
+	public Long putJson(BuntataNode node)
 	{
 		if (id == null)
 		{
-			throw new ResourceException(422);
+			throw new ResourceException(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
 		}
 		else
 		{
@@ -85,7 +95,8 @@ public class Node extends ServerResource
 
 			if (nd != null)
 			{
-				throw new ResourceException(409);
+				dao.update(node);
+				return node.getId();
 			}
 			else
 			{
@@ -106,11 +117,18 @@ public class Node extends ServerResource
 		}
 		else if (nodeParentId != null)
 		{
-			return dao.getAllForParent(nodeParentId);
+			result.addAll(dao.getAllForParent(nodeParentId));
+		}
+		else if (searchTerm != null)
+		{
+			if (datasourceId != null)
+				result.addAll(dao.getAllForSearch(datasourceId, searchTerm));
+			else
+				throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST);
 		}
 		else
 		{
-			return dao.getAll();
+			result.addAll(dao.getAll());
 		}
 
 		// Restrict paths to just the filename

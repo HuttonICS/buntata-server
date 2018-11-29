@@ -22,10 +22,19 @@ import okhttp3.*;
 
 public class AuthenticationInterceptor implements Interceptor
 {
+	private String method;
 	private String authToken;
 
-	public AuthenticationInterceptor(String token)
+	public AuthenticationInterceptor(String authToken)
 	{
+		String[] split = authToken.split(" ");
+		this.method = split[0];
+		this.authToken = split[1];
+	}
+
+	public AuthenticationInterceptor(String method, String token)
+	{
+		this.method = method;
 		this.authToken = token;
 	}
 
@@ -33,12 +42,29 @@ public class AuthenticationInterceptor implements Interceptor
 	public Response intercept(Chain chain)
 		throws IOException
 	{
-		Request original = chain.request();
+		if (authToken != null)
+		{
+			Request original = chain.request();
 
-		Request.Builder builder = original.newBuilder()
-										  .header("Authorization", authToken);
+			Request.Builder builder = original.newBuilder()
+											  .header("Authorization", method + " " + authToken);
 
-		Request request = builder.build();
-		return chain.proceed(request);
+			builder.addHeader("Cookie", "token=" + authToken);
+
+			Request request = builder.build();
+			return chain.proceed(request);
+		}
+		else
+		{
+			return chain.proceed(chain.request());
+		}
+	}
+
+
+	public AuthenticationInterceptor setAuthToken(String method, String authToken)
+	{
+		this.method = method;
+		this.authToken = authToken;
+		return this;
 	}
 }

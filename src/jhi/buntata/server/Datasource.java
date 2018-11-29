@@ -16,6 +16,7 @@
 
 package jhi.buntata.server;
 
+import org.restlet.data.Status;
 import org.restlet.resource.*;
 
 import java.io.*;
@@ -48,12 +49,35 @@ public class Datasource extends ServerResource
 		}
 	}
 
+	@Delete("json")
+	public boolean deleteJson()
+	{
+		if (id == null)
+		{
+			throw new ResourceException(Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
+		}
+		else
+		{
+			BuntataDatasource ds = dao.get(id);
+
+			if (ds != null)
+			{
+				dao.delete(ds.getId());
+				return true;
+			}
+			else
+			{
+				throw new ResourceException(Status.CLIENT_ERROR_NOT_FOUND);
+			}
+		}
+	}
+
 	@Post("json")
-	public boolean postJson(BuntataDatasource datasource)
+	public Long postJson(BuntataDatasource datasource)
 	{
 		if (id != null)
 		{
-			throw new ResourceException(400);
+			throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST);
 		}
 		else
 		{
@@ -62,11 +86,11 @@ public class Datasource extends ServerResource
 	}
 
 	@Put("json")
-	public boolean putJson(BuntataDatasource datasource)
+	public Long putJson(BuntataDatasource datasource)
 	{
 		if (id == null)
 		{
-			throw new ResourceException(422);
+			throw new ResourceException(Status.CLIENT_ERROR_UNPROCESSABLE_ENTITY);
 		}
 		else
 		{
@@ -74,7 +98,7 @@ public class Datasource extends ServerResource
 
 			if (ds != null)
 			{
-				throw new ResourceException(409);
+				throw new ResourceException(Status.CLIENT_ERROR_CONFLICT);
 			}
 			else
 			{
@@ -99,9 +123,12 @@ public class Datasource extends ServerResource
 		}
 
 		result.forEach(ds -> {
-			File icon = new File(ds.getIcon());
+			if (ds.getIcon() != null)
+			{
+				File icon = new File(ds.getIcon());
 
-			ds.setIcon(icon.getName());
+				ds.setIcon(icon.getName());
+			}
 		});
 
 		return result;
